@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>ヨケルン 1minute</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- ============ HOME (simple title: title / character / bottom panel only) ============ -->
+      <div class="view active" id="view-home">
+        <div class="home-top">
+          <h1 class="title" aria-label="ヨケルン 1minute"><span class="title-main" aria-hidden="true">ヨケルン</span> <span class="title-sub" aria-hidden="true">1minute</span></h1>
+        </div>
+        <div class="home-char" aria-hidden="true"><img id="home-bg-img" src="assets/img_4200239613.jpg" alt="" /></div>
+        <div class="home-bottom">
+          <button class="play-btn" id="btn-play">▶ スタート</button>
+          <button class="menu-open-btn" data-nav="menu">☰ メニュー</button>
+        </div>
+      </div>
+
+      <!-- ============ PRE-PLAY POPUP (opened by Start; Play begins the countdown) ============ -->
+      <div class="sheet-back preplay-back" id="preplay-back">
+        <div class="sheet preplay-sheet" role="dialog" aria-modal="true" aria-labelledby="preplay-title">
+          <div class="preplay-head">
+            <h3 id="preplay-title">あそぶ じゅんび</h3>
+            <button class="preplay-x" id="preplay-close-x" aria-label="閉じてタイトルに戻る">✕</button>
+          </div>
+
+          <div class="preplay-mode">
+            <div class="pr-title">🎮 モード</div>
+            <div class="mode-btns" role="group" aria-label="モードを選ぶ">
+              <button class="mode-btn on" data-mode-sel="normal" aria-pressed="true">60びょう<small>いつもの 1分間</small></button>
+              <button class="mode-btn" data-mode-sel="endless" aria-pressed="false">エンドレス<small>ぶつかるまで ずっと</small></button>
+            </div>
+          </div>
+
+          <div class="preplay-diff">
+            <div class="pr-title">🎚️ レベル</div>
+            <div class="diff-btns" role="group" aria-label="レベルを選ぶ">
+              <button class="diff-btn" data-diff="easy" aria-pressed="false">やさしい<small>おそい・すきま ひろい</small></button>
+              <button class="diff-btn" data-diff="normal" aria-pressed="true">ふつう<small>まんなか</small></button>
+              <button class="diff-btn" data-diff="hard" aria-pressed="false">むずかしい<small>はやい・すきま せまい</small></button>
+            </div>
+          </div>
+
+          <p class="preplay-mod" id="home-mod-line">今週のボーナス： —</p>
+
+          <p class="preplay-endless-note" id="preplay-endless-note" hidden>🏃 エンドレスは 時間が ないよ。ぶつかるまで 走ろう！<br /><b>エンドレスでは カケラは 出ないよ</b>。かわりに <b>⬡ エンドレスコイン</b>が 出るよ（約12秒に 1まい ／ 1分 たえるごとに +5まい）。<br /><b>エンドレスで あつめた コインで 買えるよ</b> — ショップの「エンドレス限定」を 見てね。今週のボーナスは つかない（いつも 同じ ルール）。ふっかつと、走っている時の 攻撃の 追加購入は できないよ。</p>
+
+          <p class="preplay-skill" id="preplay-skill"></p>
+
+          <p class="preplay-music" id="preplay-music">おんがく：キラキラポップ</p>
+
+          <div class="preplay-nav">
+            <button class="preplay-nav-btn" id="btn-open-daily"><span>🎯 きょうの ミッションを 見る</span><span class="pn-arrow" aria-hidden="true">›</span></button>
+            <button class="preplay-nav-btn" id="btn-open-growth"><span>🎒 あつめたものを 見る</span><span class="pn-arrow" aria-hidden="true">›</span></button>
+          </div>
+
+          <div class="preplay-actions">
+            <button class="play-btn" id="btn-preplay-start">▶ プレイ スタート</button>
+            <button class="home-btn" id="btn-preplay-close">閉じる</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DAILY PAGE (from the pre-play popup; Back returns to the popup) ============ -->
+      <div class="view" id="view-daily">
+        <div class="scroll">
+          <h2 class="page-title">🎯 きょうの ミッション</h2>
+          <p class="page-sub">きょうの チャレンジと、ミッションの すすみぐあいと ごほうびを 見るページ。</p>
+          <div class="daily-card" id="daily-page"></div>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back-preplay>← 戻る</button></div>
+      </div>
+
+      <!-- ============ COLLECTION / GROWTH PAGE (from the pre-play popup; Back returns to the popup) ============ -->
+      <div class="view" id="view-growth">
+        <div class="scroll">
+          <h2 class="page-title">🎒 あつめたもの</h2>
+          <p class="page-sub">もっている コインと、あつめた スキン・キャラを 見るページ。</p>
+          <div class="stat-row">
+            <div class="stat"><div class="k">もっている コイン</div><div class="v">🪙 <span class="num" id="home-growth-coins">0</span></div></div>
+            <div class="stat"><div class="k">スキン</div><div class="v num" id="home-growth-skins">1 / 4</div></div>
+            <div class="stat"><div class="k">キャラ</div><div class="v num" id="home-growth-chars">1 / 3</div></div>
+          </div>
+          <div class="growth-next">
+            <span class="gn-label">つぎに 買えるもの</span>
+            <span class="hg-next" id="home-growth-next">コインを あつめて、スキンや 新しいキャラを 買おう</span>
+          </div>
+          <button class="growth-shop-btn" data-nav="shop">🛒 ショップへ行く</button>
+          <button class="growth-shop-btn" data-nav="season" style="background:linear-gradient(135deg,#7c2bff,#00b8d9)">🌸 シーズンを 見る</button>
+          <button class="growth-shop-btn" data-nav="records" style="background:var(--surface2);color:var(--ink);box-shadow:var(--shadow)">📈 きろく・じっせき・アルバム</button>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back-preplay>← 戻る</button></div>
+      </div>
+
+      <!-- ============ MENU (all other functions live here) ============ -->
+      <div class="view" id="view-menu">
+        <div class="scroll">
+          <h2 class="page-title">☰ メニュー</h2>
+          <p class="page-sub">あそび方 いがいの ボタンは ここに あるよ。お金は ぜんぶ モック（本物の お金は つかわない）。</p>
+          <nav class="menu-grid" aria-label="メニュー">
+            <button class="menu-btn wide" data-nav="shop"><span class="mb-ic">🛒</span><span class="mb-tx">ショップ</span><span class="mb-sub">買う・つよくする・スキン・いまだけ</span></button>
+            <button class="menu-btn wide accent" data-nav="gacha"><span class="mb-ic">🎰</span><span class="mb-tx">ガチャ</span><span class="mb-sub">スキン＆アイテム</span></button>
+            <button class="menu-btn wide" data-nav="status"><span class="mb-ic">📊</span><span class="mb-tx">ステータス</span><span class="mb-sub">きろく・ステータス・ミッション</span></button>
+            <button class="menu-btn wide accent" data-nav="collection"><span class="mb-ic">◆</span><span class="mb-tx">あつめたもの</span><span class="mb-sub" id="menu-collection-sub">伝説のカケラ 0 / 10<span class="nb"> ・</span> いまだけのもの</span></button>
+            <button class="menu-btn wide accent" data-nav="season"><span class="mb-ic">🌸</span><span class="mb-tx">シーズン</span><span class="mb-sub">4週間の ごほうびトラック<span class="nb"> ・</span> アルバムもあるよ</span></button>
+            <button class="menu-btn wide" data-nav="records"><span class="mb-ic">📈</span><span class="mb-tx">きろく</span><span class="mb-sub">じっせき ・ アルバム ・ この たんまつ内だけの きろく</span></button>
+            <button class="menu-btn wide accent" data-nav="ranked"><span class="mb-ic">🏆</span><span class="mb-tx">ランク戦・大会</span><span class="mb-sub">みんな同じ ルールの 勝負</span></button>
+            <button class="menu-btn wide" data-nav="friend"><span class="mb-ic">👥</span><span class="mb-tx">フレンド</span><span class="mb-sub">ライフを おくる・もらう</span></button>
+            <button class="menu-btn wide" data-nav="guide"><span class="mb-ic">📖</span><span class="mb-tx">ずかん・メモ</span><span class="mb-sub">アイテム・メモ</span></button>
+            <button class="menu-btn wide" data-nav="settings"><span class="mb-ic">⚙️</span><span class="mb-tx">せってい</span><span class="mb-sub">音・がめん・データ</span></button>
+          </nav>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ COLLECTION / LEGEND FRAGMENTS ============ -->
+      <div class="view" id="view-collection">
+        <div class="scroll">
+          <h2 class="page-title">◆ あつめたもの</h2>
+          <p class="page-sub">伝説のカケラは<strong>ガチャでは 手に入らないし、買うことも できない</strong>。ふつうの ランで 走っている時に 流れてくる カケラを ひろって あつめるもの。<strong>エンドレスでは カケラは 出ないよ</strong>（かわりに エンドレスコインが 出る）。かくりつを かくすような ことは ないよ。</p>
+          <div id="collection-main"></div>
+          <section class="block">
+            <div class="block-head"><h2>🏃 エンドレス限定</h2><span class="note">エンドレスコインで 買う ・ ガチャに出ない ・ お金では 買えない</span></div>
+            <div id="collection-endless"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>もっているもの</h2><span class="note">きかんが おわっても なくならない。ずっと つかえる</span></div>
+            <div class="rank-list" id="collection-owned"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>まえの いまだけアイテム</h2><span class="note">おわった ・ もう手に入らない</span></div>
+            <div class="rank-list" id="collection-past"></div>
+          </section>
+          <p class="foot-note">レジェンド アイテムと いまだけアイテムは ぜんぶ 見た目だけ。強さ・スコア・ランク戦の ルールは かわらない。お金は ぜんぶ モック。</p>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ SHOP ============ -->
+      <div class="view" id="view-shop">
+        <div class="scroll">
+          <h2 class="page-title">🛒 ショップ</h2>
+          <p class="page-sub">もっている コイン <span class="num" id="shop-coins" style="color:var(--orange)">0</span> ／ エンドレスコイン <span class="num ecoin-bal" id="shop-ecoins-top">⬡ 0</span> まい ／ お金は ぜんぶ モック（本物の お金は かからない）</p>
+
+          <div class="attack-card">
+            <div class="attack-info">
+              <span class="attack-tt">💥 攻撃 <span class="num" id="home-attack-count">×1</span></span>
+              <span class="attack-ds">1回 走るごとに 1回、がめんの 岩を ぜんぶ こわせる。先に 買うと、つぎに 走る時に つかえる 攻撃が ふえる（1回に ぜんぶで さいだい×3）。</span>
+            </div>
+            <button class="attack-buy" id="btn-buy-attack">攻撃 +1<br /><small>🪙 100（モック）</small></button>
+          </div>
+          <button class="lives-refill" id="btn-refill-lives">❤️ ライフ ぜんぶ もどす ¥160（モック）</button>
+
+          <section class="block">
+            <div class="block-head"><h2>⏳ いまだけ</h2><span class="note">いまだけ 手に入る ・ おわると まえのアイテムへ</span></div>
+            <div id="limited-shop"></div>
+          </section>
+
+          <section class="block" id="shop-endless-section">
+            <div class="block-head"><h2>🏃 エンドレス限定</h2><span class="note">エンドレスコインだけ ・ お金や ガチャでは 買えない</span></div>
+            <p class="page-sub">エンドレスで あつめた コインで 買えるよ。エンドレスでは カケラは 出ないよ。<br />もっている エンドレスコイン <span class="num ecoin-bal" id="shop-ecoins">⬡ 0</span> まい（ふつうの コインでは 買えない）</p>
+            <div id="endless-shop"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>つよくする</h2><span class="note">コインで ずっと つよくなる</span></div>
+            <div class="shop-grid" id="upg-grid"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>スキン</h2><span class="note">色と 残像が かわる（見た目だけ）</span></div>
+            <div class="shop-grid" id="skin-grid"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>そのほか</h2><span class="note">べんりに なるものだけ</span></div>
+            <div class="shop-grid" id="misc-grid"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>ナビの 衣装</h2><span class="note">見た目だけ — 強さと ランク戦の ルールは かわらない</span></div>
+            <div id="navi-preview"></div>
+            <div class="shop-grid" id="navi-grid" style="margin-top:12px"></div>
+            <div class="block-head" style="margin-top:18px"><h2>衣装の 色ちがい</h2><span class="note">同じ衣装の 色ちがい ・ 見た目だけ ・ 🪙 150</span></div>
+            <div class="shop-grid" id="navi-variant-grid"></div>
+            <div class="block-head" style="margin-top:18px"><h2>キャラ</h2><span class="note">えらぶと タイトルに 出て、スキルが つかえる（いつもの ランだけ）</span></div>
+            <div class="shop-grid" id="navi-char-grid"></div>
+            <div class="block-head" style="margin-top:18px"><h2>かみがた</h2><span class="note">レベルアップで ゲット・お金は いらない</span></div>
+            <div id="navi-hair-row"></div>
+          </section>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ GACHA ============ -->
+      <div class="view" id="view-gacha">
+        <div class="scroll">
+          <h2 class="page-title">🎰 ガチャ</h2>
+          <p class="page-sub">もっている コイン <span class="num" id="gacha-coins" style="color:var(--orange)">0</span> ／ かくりつは ぜんぶ 公開。かぶったら コインに かわる。セットを そろえる タイプでは ないよ。お金は モック。</p>
+          <div id="gacha-navi"></div>
+          <div id="gacha-limited"></div>
+
+          <section class="gacha-box">
+            <h3 class="gacha-title">🎨 スキンガチャ <span class="gacha-tag">見た目だけ・強さは かわらない</span></h3>
+            <table class="odds">
+              <tr><th>スキン</th><th>かくりつ</th><th>かぶったら</th></tr>
+              <tr><td>インフェルノ</td><td>5%</td><td>コイン +300</td></tr>
+              <tr><td>ゴールドコメット</td><td>10%</td><td>コイン +200</td></tr>
+              <tr><td>ネオンファントム</td><td>15%</td><td>コイン +150</td></tr>
+              <tr><td>ミントアメーバ</td><td>20%</td><td>コイン +100</td></tr>
+              <tr><td>ぶどうアメーバ</td><td>20%</td><td>コイン +100</td></tr>
+              <tr><td>さくらアメーバ</td><td>30%</td><td>コイン +100</td></tr>
+            </table>
+            <div class="gacha-btns">
+              <button class="gacha-pull" data-gacha="skin" data-n="1">1回引く<small>🪙 200</small></button>
+              <button class="gacha-pull" data-gacha="skin" data-n="10">10回引く<small>🪙 2,000</small></button>
+            </div>
+            <p class="gacha-balance" id="skin-gacha-balance"></p>
+          </section>
+
+          <section class="gacha-box">
+            <h3 class="gacha-title">🧪 アイテムガチャ <span class="gacha-tag">走る時に つかう アイテム</span></h3>
+            <table class="odds">
+              <tr><th>アイテム</th><th>かくりつ</th><th>こうか</th></tr>
+              <tr><td>攻撃チケット</td><td>25%</td><td>つぎに 走る時の 攻撃 +1</td></tr>
+              <tr><td>スタートシールド</td><td>25%</td><td>つぎの はじめの シールド +1</td></tr>
+              <tr><td>スタートマグネット</td><td>20%</td><td>つぎの はじめ マグネット5秒</td></tr>
+              <tr><td>スタート×2</td><td>15%</td><td>つぎの はじめ スコア×2 10秒</td></tr>
+              <tr><td>ずっと つよくなる +1</td><td>15%</td><td>どれか 1つが 1だんかい あがる（ぜんぶ MAXの時は コイン +200）</td></tr>
+            </table>
+            <div class="gacha-btns">
+              <button class="gacha-pull" data-gacha="item" data-n="1">1回引く<small>🪙 100</small></button>
+              <button class="gacha-pull" data-gacha="item" data-n="10">10回引く<small>🪙 1,000</small></button>
+            </div>
+            <p class="gacha-balance" id="item-gacha-balance"></p>
+            <p class="gacha-stock" id="item-stock-line"></p>
+          </section>
+
+          <section class="gacha-box">
+            <h3 class="gacha-title">👗 ナビ衣装ガチャ <span class="gacha-tag">見た目だけ・強さは かわらない</span></h3>
+            <table class="odds">
+              <tr><th>衣装</th><th>かくりつ</th><th>かぶったら</th></tr>
+              <tr><td>ミントドレス</td><td>35%</td><td>コイン +150</td></tr>
+              <tr><td>さくらメイド風</td><td>30%</td><td>コイン +200</td></tr>
+              <tr><td>スターステージ</td><td>20%</td><td>コイン +300</td></tr>
+              <tr><td>コイン +150</td><td>15%</td><td>そのまま 入る</td></tr>
+            </table>
+            <div class="gacha-btns">
+              <button class="gacha-pull" data-gacha="navi" data-n="1">1回引く<small>🪙 150</small></button>
+              <button class="gacha-pull" data-gacha="navi" data-n="10">10回引く<small>🪙 1,500</small></button>
+            </div>
+            <p class="gacha-balance" id="navi-gacha-balance"></p>
+          </section>
+
+          <div id="gacha-result" class="gacha-result" style="display:none"></div>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ FRIEND ============ -->
+      <div class="view" id="view-friend">
+        <div class="scroll">
+          <h2 class="page-title">👥 フレンド</h2>
+          <p class="page-sub">ここに いるのは テスト用の<strong>サンプル フレンド</strong>だけ。本人の アカウントでは ないし、そとに メッセージを 送ることも、個人の データを つかうことも ないよ。やりとりは ぜんぶ この たんまつの 中だけの モック。</p>
+          <div class="friend-status">
+            <span>あなたの ライフ <span class="num" id="friend-my-lives">5 / 5</span></span>
+            <span>コイン <span class="num" id="friend-coins" style="color:var(--orange)">0</span></span>
+            <span class="fs-sub">ライフを おくっても 自分の ライフは へらない。おくるたびに、おれいに 🪙 +10 コインが もらえる（1人に 1日 1回まで）。</span>
+          </div>
+          <section class="block">
+            <div class="block-head"><h2>📥 とどいたもの</h2><span class="note">とどいた ライフは ここで もらう</span></div>
+            <div id="friend-inbox"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>🙏 ライフを リクエスト</h2><span class="note">モックで 送るだけ</span></div>
+            <button class="request-btn" id="btn-request-lives">🙏 ライフを リクエストする</button>
+            <p class="friend-reward" id="friend-request-note"></p>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>サンプル フレンド</h2><span class="note">みんな テスト用の サンプル</span></div>
+            <div id="friend-list"></div>
+          </section>
+          <p class="foot-note">フレンドは モック。本物の お金や、そとへの送信は ないよ。</p>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ RANKED / TOURNAMENT ============ -->
+      <div class="view" id="view-ranked">
+        <div class="scroll">
+          <h2 class="page-title">🏆 ランク戦・大会</h2>
+          <p class="page-sub">いつもの ランとは べつの 勝負モード。ランク戦は みんな 同じ ルールで、スコアは うでだけ で きまる。お金で 有利に なる ことは ない。</p>
+          <div class="tier-card" id="ranked-tier-card"></div>
+          <button class="ranked-play" id="btn-play-ranked">🏆 ランク戦 スタート（ライフ −1）</button>
+          <p class="play-sub">60秒 きっかり ／ 攻撃は もとの 1回だけ（追加で 買えない）／ コインで ふっかつ なし<br />ステータス・つよくした分・ガチャアイテムは みんな 同じに なる<br />レベルと 今週のボーナスは ランク戦では つかわれない<br />キャラの スキルも ランク戦では つかわれない（みんな 同じ）</p>
+          <section class="block">
+            <div class="block-head"><h2>みんな同じ ルール</h2><span class="note">ランク戦の ルール</span></div>
+            <div class="tier-card" style="margin-top:0">
+              <ul class="rules-list">
+                <li>時間は 60秒 きっかり。レベルも みんな 同じ</li>
+                <li>攻撃は 1回に 1回まで。コインで 追加は 買えない</li>
+                <li>コインで ふっかつ（つづける）は つかえない</li>
+                <li>ステータス・つよくした分・ミッションの倍率は ×1.00 に なる</li>
+                <li>はじめの シールドは 0まい。マグネットの はんいと 出やすさも みんな 同じ</li>
+                <li>キャラの スキル（スピード・バリア・マグネット）も つかわれない</li>
+                <li>さいごの 10秒は <strong>クラッチタイム</strong>（ポイント×2）</li>
+                <li>ナビの 衣装・かみがた・顔は ルールに かんけい ない</li>
+                <li>レジェンド アイテム・いまだけアイテムも 見た目だけで、ルールは かわらない（伝説のカケラ集めは スコアに かんけい ない）</li>
+              </ul>
+            </div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>ランク戦の ランキング</h2><span class="note">ランク戦の ベストで きそう</span></div>
+            <div class="rank-list" id="rank-list-ranked"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>いつもの ランの ランキング</h2><span class="note">つよくした分も 入った 記録（べつの わく）</span></div>
+            <div class="rank-list" id="rank-list-casual"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>🗓️ 今週の 大会（モック）</h2><span class="note">おわるまで <span class="num" id="tourney-countdown">—</span></span></div>
+            <p class="sample-note" id="ranked-sample-note" hidden>⚠ サンプル記録（本物ではありません）</p>
+            <div class="rank-list" id="tourney-list"></div>
+            <div class="tier-card">
+              <span class="mc-tt">🎁 大会の ごほうび（見た目だけ）</span>
+              <ul class="rules-list">
+                <li>1位： レジェンドの 軌跡（銀ボールの 残像が 虹色に）</li>
+                <li>トップ10： 大会だけの フレームと しょうごう</li>
+                <li>さんか賞： この大会だけの 色の 残像</li>
+              </ul>
+              <p class="tier-note">ごほうびは ぜんぶ 見た目だけ。強さ・スコア・ランクは かわらない。</p>
+              <button class="season-pass-btn" id="btn-season-pass">🎫 シーズンパス ¥480（モック）— 見た目だけの とくてん</button>
+            </div>
+          </section>
+          <p class="foot-note" id="ranked-foot-note">大会と ランキングは テスト用の モック表示。お金は ぜんぶ モックで、本物の お金は かからない（ねだんは ぜんぶ ¥480 以下）。</p>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ STATUS ============ -->
+      <div class="view" id="view-status">
+        <div class="scroll">
+          <h2 class="page-title">📊 ステータス</h2>
+          <div class="stat-row">
+            <div class="stat"><div class="k">ベスト</div><div class="v num" id="home-best">0</div></div>
+            <div class="stat"><div class="k">れんぞく</div><div class="v"><span class="flame">🔥</span><span class="num" id="home-streak">1</span><small>日</small></div></div>
+            <div class="stat"><div class="k">コイン</div><div class="v num" id="home-coins" style="color:var(--orange)">0</div></div>
+          </div>
+          <div class="lv-card">
+            <div class="lv-top">
+              <span class="lv-badge num" id="home-level">Lv.1</span>
+              <span class="lv-bonus" id="home-lvbonus">スコアの倍率 ×1.00</span>
+              <span class="lv-next num" id="home-xpnext"></span>
+            </div>
+            <div class="xp-bar"><div class="xp-fill" id="home-xpfill" style="width:0%"></div></div>
+          </div>
+
+          <section class="block">
+            <div class="block-head"><h2>ステータスを ふやす</h2><span class="note">のこり <span class="status-points" id="status-points">0</span> pt（レベルアップで +2）</span></div>
+            <div class="rank-list" id="status-list"></div>
+            <button class="reset-btn" id="btn-status-reset">↩️ ステータスを もどす<br />（お金は いらない・何回でも）</button>
+            <p class="play-sub" style="text-align:left;margin-top:8px">もどすのは お金 いらない。ふやした分は コイン・レベルと 同じ セーブに 入る。</p>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>ミッション</h2><span class="note">3つ クリアで スコアの倍率 +1（さいだい×10）／ いま <span id="mission-mult">×1</span></span></div>
+            <div class="rank-list" id="mission-list"></div>
+          </section>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ SETTINGS ============ -->
+      <div class="view" id="view-settings">
+        <div class="scroll">
+          <h2 class="page-title">⚙️ せってい</h2>
+          <p class="page-sub">せっていは セーブデータと いっしょに 入る。</p>
+          <div class="set-row"><span class="set-name">🔊 サウンド</span><button class="set-toggle" data-set="sound">ON</button></div>
+          <div class="set-row"><span class="set-name">📺 CRTがめん（プレイ中だけ）</span><button class="set-toggle" data-set="crt">ON</button></div>
+          <div class="set-row"><span class="set-name">📳 バイブレーション</span><button class="set-toggle" data-set="vib">ON</button></div>
+          <div class="set-row"><span class="set-name">🌐 こうかい版モード<span class="pub-desc">フリー公開用の設定。ライフがへらない・お金の画面が出ない・フレンドが出ない</span></span><button class="set-toggle off" id="btn-public-toggle" aria-pressed="false">OFF</button></div>
+          <section class="block">
+            <div class="block-head"><h2>🎵 おんがく（BGM）</h2><span class="note">あそぶ時に 流れる曲</span></div>
+            <p class="page-sub">ボタンを 押すと、その場で 少しだけ 試し聞き できるよ。えらんだ曲は おぼえて おくよ。</p>
+            <div class="bgm-list">
+              <button class="bgm-btn" data-bgm="pop" aria-pressed="false"><span class="bgm-ic" aria-hidden="true">🎵</span><span class="bgm-mid"><span class="bgm-name">キラキラポップ</span><span class="bgm-desc">明るく 元気な 基本の曲（テンポ ふつう）</span></span><span class="bgm-state">▶ 試し聞き</span></button>
+              <button class="bgm-btn" data-bgm="speed" aria-pressed="false"><span class="bgm-ic" aria-hidden="true">⚡</span><span class="bgm-mid"><span class="bgm-name">ドキドキスピード</span><span class="bgm-desc">速くて ドキドキする曲（テンポ はやい）</span></span><span class="bgm-state">▶ 試し聞き</span></button>
+              <button class="bgm-btn" data-bgm="chill" aria-pressed="false"><span class="bgm-ic" aria-hidden="true">🌙</span><span class="bgm-mid"><span class="bgm-name">まったりチル</span><span class="bgm-desc">ゆるくて 落ちつく曲（テンポ おそい）</span></span><span class="bgm-state">▶ 試し聞き</span></button>
+              <button class="bgm-btn" data-bgm="off" aria-pressed="false"><span class="bgm-ic" aria-hidden="true">🔇</span><span class="bgm-mid"><span class="bgm-name">オフ</span><span class="bgm-desc">BGMなし・効果音だけ</span></span><span class="bgm-state">▶ 試し聞き</span></button>
+            </div>
+            <p class="bgm-note">オフ＝自分の 音楽アプリで 好きな曲を 流してね（効果音だけ 出るよ）。</p>
+          </section>
+          <div class="set-row"><span class="set-name">💾 セーブデータ（コイン・レベル・もっているもの）</span><button class="set-toggle danger" id="btn-reset-save">リセット</button></div>
+          <p class="foot-note">お金は ぜんぶ モックで、本物の お金は かからない。ランキングと れんぞく日数は テスト用の サンプル表示。</p>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ GUIDE / MARKET MEMO ============ -->
+      <div class="view" id="view-guide">
+        <div class="scroll">
+          <h2 class="page-title">📖 ずかん・メモ</h2>
+
+          <button class="guide-open-btn" id="btn-open-guide">📖 あそび方ガイドを 開く<br />（ナビの せつめい）</button>
+
+          <div class="howto">
+            <div class="step"><div class="ic">👆</div><div class="tx">指で ドラッグして うごく</div></div>
+            <div class="step"><div class="ic">⭐</div><div class="tx">星と<span>ボーナスアイテム</span>を ひろう</div></div>
+            <div class="step"><div class="ic">💨</div><div class="tx">岩を すれすれで よけて<span>コンボ</span></div></div>
+          </div>
+
+          <section class="block">
+            <div class="block-head"><h2>ニアミスの ところ</h2><span class="note">ねらって 点が とれる ところが 出る</span></div>
+            <div class="item-legend">
+              <div class="il"><span class="ic">⛩️</span><span><span class="tt">ゲート</span><span class="ds">アメーバの かべに すきまが 1つだけ。光る はし ギリギリを ぬけると「すれすれゲート」で 大ボーナス＋コンボ。まんなかを ぬけても 点は ある。</span></span></div>
+              <div class="il"><span class="ic">🧱</span><span><span class="tt">通路（コリドー）</span><span class="ds">りょうがわに かべが ある ほそい 通路。あいだを ぬけつづけると 点が 入りつづける。かべに 近いほど「ニアスレッド」で コンボが のびる。</span></span></div>
+            </div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>アイテム ずかん</h2><span class="note">走っている時に ひろえる アイテム</span></div>
+            <div class="item-legend">
+              <div class="il"><span class="ic">⭐</span><span><span class="tt">ボーナス星（金スター・10倍）</span><span class="ds">めったに 出ない。大きな とがった 星＋太い 白い ふち＋金の 光＋「BONUS」の 文字＋出た時の お知らせと 音で すぐ 分かる。点が たくさん＋コイン+30。黄色／金色は この ごほうび だけに つかう。</span></span></div>
+              <div class="il"><span class="ic">◆</span><span><span class="tt">伝説のカケラ（レジェンド）</span><span class="ds">ふつうの ランで 走っている時に まれに 流れてくる、むらさきピンクの けっしょう＋白い ふち＋「カケラ」の 文字。星・コイン・敵・ボーナス星とは 形も 文字も ちがう。ガチャでは 手に入らないし 買えない。10個 あつめると レジェンド アイテム ゲット（見た目だけ）。エンドレスでは カケラは 出ないよ（かわりに エンドレスコインが 出る）。すすみぐあいは「あつめたもの」の ページで いつでも 見られる。</span></span></div>
+              <div class="il"><span class="ic">🧲</span><span><span class="tt">マグネット 5秒</span><span class="ds">星を 引きよせる。のこり時間は 上の チップに 出る。</span></span></div>
+              <div class="il"><span class="ic">🛡️</span><span><span class="tt">シールド +1</span><span class="ds">ダメージを 1回 なしに する。もっている 数は チップに 出る。</span></span></div>
+              <div class="il"><span class="ic">⏳</span><span><span class="tt">スロー 3秒</span><span class="ds">まわりが ゆっくりに なる。のこり時間は チップに 出る。</span></span></div>
+              <div class="il"><span class="ic">✖️</span><span><span class="tt">スコア×2 10秒</span><span class="ds">スコア ぜんぶ 2倍。のこり時間は チップに 出る。</span></span></div>
+              <div class="il"><span class="ic">🪙</span><span><span class="tt">コインボーナス</span><span class="ds">すぐに コイン +50。ひろった 時に 入る。</span></span></div>
+              <div class="il"><span class="ic">🔥</span><span><span class="tt">バリア 5秒</span><span class="ds">ダメージなしに なり、ふれた 岩を こわす。のこり時間は チップに 出る。</span></span></div>
+              <div class="il"><span class="ic">🌟</span><span><span class="tt">スターの雨</span><span class="ds">星が 10個 まとめて ふってくる（金星 入り）。</span></span></div>
+            </div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>今週の ランキング</h2><span class="note">テスト用の サンプル</span></div>
+            <div class="rank-list" id="rank-list"></div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>レベル・今週のボーナス・ミッション</h2><span class="note">ステージの しくみ</span></div>
+            <div class="rank-list" style="padding:14px 16px">
+              <ul class="src-list">
+                <li><b>レベル（いつもの ランだけ）</b>： やさしい／ふつう／むずかしい。かわるのは 岩の 速さ、すきまの 広さ、うごき方、出る 多さだけ。星の 数（40個＋金星4個）、ゲートの 回数（4回）、ボーナスの 点数、60秒、さいご10秒×2は ぜんぶ 同じで、MAXは 同じ <b>11,840 pt</b>（倍率×1の時。けいさん： 時間点840＋（星2,000＋金星2,000＋ゲート300＋通路1,200）×2.0）。結果画面には レベルと「パーフェクトまで あと何pt」が 出る。ランク戦は みんな同じ ルールで、レベルも 今週のボーナスも つかわれない。</li>
+                <li><b>出る場所は ランダム</b>： 岩の 出方、星の 場所、アイテム、ゲート／通路の 場所は 走るたびに かわる。でも すきまの いちばん せまい所（ゲート82px以上）と 出る 間かくには 下限が あるから、通れない 配置には ならない。</li>
+                <li><b>今週のボーナス</b>： 週ごとに 1つだけ（金星ラッシュ／ニアミス長持ち／マグネット／シールド／スターの雨／×2チャンス）。ぜんぶ もとの アイテムや 効果の はんいで、数や 点数は かわらない。ホームと 走る前に 出る。走っている時は 20秒ごろと 40秒ごろに 1回ずつ、小さな イベント（もとの アイテムの 効果）が 起きる。</li>
+                <li><b>デイリー／今週の ミッション</b>： きょうの チャレンジ 1つ＋デイリー 3つ、今週の 3つ。クリアすると コインは じどうで 入る（デイリーは 150まで／今週は 300まで）。すすみぐあいは デイリーの ページで 見られる。</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="block">
+            <div class="block-head"><h2>売れている ゲームの メモ</h2><span class="note">取り入れた 理由</span></div>
+            <div class="rank-list" style="padding:14px 16px">
+              <ul class="src-list">
+                <li><b>もとは Subway Surfers</b>： じどうで 進んで、よけて、コインや アイテムを あつめて ハイスコアを ねらう 形が もと（MAU 92M、2026年5月 時点の すいてい）。出典：<a href="https://gamedevreports.substack.com/p/sensor-tower-mobile-game-ad-monetization" target="_blank" rel="noopener">GameDev Reports</a></li>
+                <li><b>1回は 30〜90秒</b>が ふつうで、もう1回は 1秒 以内に はじまる。出典：<a href="https://game-ace.com/blog/hyper-casual-game-mechanics/" target="_blank" rel="noopener">Game-Ace</a></li>
+                <li><b>はじめの 10秒は コインが 先</b>、新しい ものは 1つずつ。ニアミスは 当たり判定を 約15% ゆるくして、危ない ゾーンは 当たる ゾーンの 約2倍で「あぶないのに たすかった」を 作る。この ゲームの はじめの 配置と ニアミス判定は これに 合わせた。出典：<a href="https://github.com/erikhazzard/vasir/blob/HEAD/.agents/skills/game__genre-routing/references/endless-runner.md" target="_blank" rel="noopener">Endless Runner Design</a></li>
+                <li><b>強さは 見える 形で ずっと つづける</b>： Subway Surfers は ミッション クリアで スコアの倍率が 1×から 30×まで あがり、コインで マグネットなどの 時間を 長く できる。この ゲームは ミッションの倍率（テストでは さいだい×10）と コインで つよくする 形に した。出典：<a href="https://gamers.wiki/en/games/subway-surfers/wiki" target="_blank" rel="noopener">Subway Surfers Wiki</a></li>
+                <li><b>ふっかつは 回数の 上限つきで ねだんが あがる</b>： もとの ゲームは 鍵が 1→2→4→8 と 2倍に なる。この ゲームは コイン150→300、1回に さいだい2回に した。出典：<a href="https://gamers.wiki/en/games/subway-surfers/guides/subway-surfers-beginner-s-guide-how-to-master-the-endless-run" target="_blank" rel="noopener">Beginner's Guide</a></li>
+                <li><b>ミステリーボックスは 500コイン</b>（もとの ゲームの ねだん）。この ゲームでは 中身の かくりつを 見せて 作った。出典：<a href="https://gamers.wiki/en/games/subway-surfers/guides/subway-surfers-currency-guide-how-to-use-coins-keys-and-tokens" target="_blank" rel="noopener">Currency Guide</a></li>
+                <li><b>ねだんの 中心は $4.99</b>（AppMagic の 2025年 しらべ： まんなかの ねだん $4.99、平均 $6.32）。広告を けすのは $0.99〜$4.99 で、$2.99 くらいが 目安。出典：<a href="https://appmagic.rocks/files/img-blog/EN_Monetization_Report_2025.pdf" target="_blank" rel="noopener">AppMagic</a>／<a href="https://copyprogramming.com/howto/how-to-make-in-app-purchase-remove-ads" target="_blank" rel="noopener">CopyProgramming</a></li>
+                <li><b>日本では コンプガチャは 2012年に きんし</b>され、かくりつを 見せる ことも 決まっている。この ゲームは セットを そろえる ガチャは 入れていない。出典：<a href="https://blog.promise.legal/loot-box-laws-by-jurisdiction-indie-game-studios/" target="_blank" rel="noopener">Promise Legal</a></li>
+              </ul>
+              <div class="caveat">注意： 上の 売上・順位・MAU は すいていで、本当の ストア表示は 地域や 時期で かわる。ライブの アプリ内 ねだん と 今の 順位は 未確認。ふっかつの 150／300 コインは もとの ゲームの 2倍の 形から 計算した すいていで、直接の 基準では ない。</div>
+            </div>
+          </section>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ GAME ============ -->
+      <div class="view" id="view-game">
+        <div class="hud">
+          <div class="hud-lives" aria-label="残りライフ">
+            <span class="lives-hearts compact" id="hud-lives-hearts"></span>
+            <span class="hud-lives-count num" id="hud-lives-count">5/5</span>
+            <span class="hud-lives-next" id="hud-lives-next">FULL</span>
+          </div>
+          <div class="hud-top">
+            <div class="hud-score">
+              <div class="k">SCORE</div>
+              <div class="v num" id="hud-score">0</div>
+              <div class="hud-best">BEST <b id="hud-best">0</b></div>
+            </div>
+            <div class="hud-right">
+              <div class="combo-box" id="combo-box" style="visibility:hidden">
+                <div class="combo-num num"><span id="combo-num">0</span><small> COMBO</small></div>
+                <div class="combo-label">ニアミス れんぞく中</div>
+              </div>
+              <span class="x2-badge" id="x2-badge">🔥 CLUTCH TIME ×2</span>
+            </div>
+          </div>
+          <div class="timer-wrap">
+            <div class="timer-meta"><span class="phase" id="phase-label">PHASE 1</span><span><span id="timer-label">残り</span> <span class="t num" id="timer-text">60.0</span></span></div>
+            <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+          </div>
+          <div class="fx-chips" id="fx-chips"></div>
+          <div class="hud-context" id="hud-context"></div>
+          <div class="hud-skill" id="hud-skill"></div>
+        </div>
+        <div class="stage-wrap" id="stage-wrap">
+          <canvas id="game"></canvas>
+          <button class="attack-btn" id="btn-attack" aria-label="攻撃を使う">
+            <span class="ab-ic">💥</span>
+            <span class="ab-label" id="attack-label">攻撃</span>
+            <span class="ab-count num" id="attack-count">×1</span>
+            <span class="ab-sub" id="attack-sub">タップで ぜんぶ こわす</span>
+          </button>
+          <div class="drag-hint" id="drag-hint">👆 ドラッグで うごかそう</div>
+          <div class="lv-flash" id="lv-flash"></div>
+          <div class="phase-banner" id="phase-banner"><div class="bt" id="phase-banner-t"></div><div class="bs" id="phase-banner-s"></div></div>
+          <div class="milestone" id="milestone"><div class="mt" id="milestone-t"></div><div class="ms" id="milestone-s"></div></div>
+          <div class="count-overlay" id="count-overlay"><div class="count-num num" id="count-num">3</div></div>
+        </div>
+      </div>
+
+      <!-- ============ RESULT (simple: score / best-update / coins only) ============ -->
+      <div class="view" id="view-result">
+        <div class="scroll">
+          <div class="result-head">
+            <div class="k" id="result-cause">⏰ 時間おわり！</div>
+            <div class="new-record" id="new-record">🏆 ベスト更新！</div>
+            <div class="final-time" id="result-time" hidden><span aria-hidden="true">🏃 </span><span class="num" id="result-time-v">0:00</span><small> たえた！</small></div>
+            <div class="final-score"><span class="num" id="final-score">0</span><small> pt</small></div>
+            <div class="best-line"><span id="result-best-label">ベスト</span> <b id="result-best">0</b> pt</div>
+            <div id="result-endless-items"></div>
+            <div class="coin-reward" id="result-coin-reward" aria-live="polite">
+              <div class="cr-label">コインを もらった！</div>
+              <div class="cr-auto">タップはいらないよ — おわった時に もう入っている</div>
+              <div class="cr-amount"><span class="cr-icon" aria-hidden="true">🪙</span><span class="cr-num num" id="result-coin-amount">+0</span></div>
+              <div class="cr-breakdown" id="result-coin-breakdown"></div>
+              <div class="cr-total">もっているコイン ぜんぶで <span class="num" id="result-coin-total">0</span></div>
+              <div class="cr-ecoin" id="result-ecoin" hidden>⬡ エンドレスコイン <span class="num" id="result-ecoin-amount">+0</span> まい ゲット！<br />ぜんぶで <span class="num" id="result-ecoin-total">0</span> まい — ショップの「エンドレス限定」で つかえるよ</div>
+            </div>
+            <div id="result-navi"></div>
+          </div>
+
+          <button class="again-btn" id="btn-again">🔁 もう1回</button>
+          <button class="home-btn" id="btn-home">ホームへ もどる</button>
+          <button class="detail-btn" id="btn-result-detail" aria-expanded="false" aria-controls="result-details">くわしく見る ▾</button>
+
+          <div id="result-details" hidden>
+            <div class="gain-line" id="result-gain"></div>
+            <div class="result-stats">
+              <div class="stat"><div class="k">ニアミス</div><div class="v num" id="st-near">0<small>回</small></div></div>
+              <div class="stat"><div class="k">いちばん長い<br />コンボ</div><div class="v num" id="st-combo">0</div></div>
+              <div class="stat"><div class="k">星</div><div class="v num" id="st-star">0<small>個</small></div></div>
+            </div>
+            <div id="result-legend"></div>
+            <div class="mode-card" id="result-ecoin-card" hidden></div>
+            <div class="mode-card" id="result-record-card"></div>
+            <button class="share-btn" id="btn-share-score">📋 スコアを コピー</button>
+            <div class="mode-card" id="result-mode-card"></div>
+            <div class="mode-card" id="result-diff-card"></div>
+            <div id="result-missions"></div>
+            <div class="clutch-card" id="result-clutch-card"></div>
+            <div class="lv-card">
+              <div class="lv-top">
+                <span class="lv-badge num" id="result-level">Lv.1</span>
+                <span class="lv-bonus" id="result-lvbonus"></span>
+                <span class="lv-next num" id="result-xpnext"></span>
+              </div>
+              <div class="xp-bar"><div class="xp-fill" id="result-xpfill" style="width:0%"></div></div>
+            </div>
+
+            <div class="continue-card" id="continue-card">
+              <div class="tt" id="continue-title">あと少しで ベスト更新！</div>
+              <div class="ds" id="continue-desc">つづけると、このスコアのまま 10秒 おまけで もう1回 走れる。</div>
+              <button id="btn-continue">⏩ コイン 150 で つづける</button>
+            </div>
+
+            <div class="lives-card result-lives">
+              <div class="lives-head">
+                <span class="lives-title">ライフ</span>
+                <span class="lives-count num" id="result-lives-count"><small>のこり</small>5 / 5</span>
+              </div>
+              <div class="lives-hearts" id="result-lives-hearts" role="img" aria-label="ライフ 5 / 5"></div>
+              <div class="lives-recovery">
+                <div class="lives-recovery-top">
+                  <span class="lives-recovery-label" id="result-lives-recovery-label">ライフ まんたん</span>
+                  <span class="lives-countdown num" id="result-lives-timer">FULL</span>
+                </div>
+                <div class="lives-bar is-full" id="result-lives-bar"><div class="lives-fill" id="result-lives-fill" style="width:100%"></div></div>
+                <p class="lives-note">「もう1回」でも スタートで ライフ1つ つかう ／ 1時間で 1つ もどる（さいだい5）</p>
+              </div>
+            </div>
+
+            <section class="block rank-mini">
+              <div class="block-head"><h2>今週のランキング</h2><span class="note">あなたの じゅんい</span></div>
+              <div class="rank-list" id="rank-list-result"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RECORDS / ACHIEVEMENTS / ALBUM (local-only measurement) ============ -->
+      <div class="view" id="view-records">
+        <div class="scroll">
+          <h2 class="page-title">📈 きろく</h2>
+          <p class="page-sub">これは <strong>この たんまつ内だけの きろく</strong>だよ。そとに 送ることは ないし、ほかの人には 見えない。あそび方の チェック用に ためている 数字だよ。</p>
+          <div id="records-main"></div>
+          <section class="block">
+            <div class="block-head"><h2>🏅 じっせき</h2><span class="note">見た目だけの ごほうび ・ コインや 強さは もらえない</span></div>
+            <div class="rank-list" id="records-ach"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h2>📖 おもいでアルバム</h2><span class="note">あそんで いると たまる ・ 買えない ・ ガチャに出ない</span></div>
+            <p class="page-sub" style="margin-bottom:10px">カードを ぜんぶ そろえても 特別な ごほうびは ないよ。おもいでを 見るための ページだよ。</p>
+            <div class="album-grid" id="records-album"></div>
+          </section>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ SEASON TRACK (4 weeks, 20 tiers, free + mock paid) ============ -->
+      <div class="view" id="view-season">
+        <div class="scroll">
+          <h2 class="page-title">🌸 シーズン</h2>
+          <div id="season-main"></div>
+          <section class="block">
+            <div class="block-head"><h2>ティアと ごほうび</h2><span class="note" id="season-track-note">フリーは 全員 ・ ペイドは モック購入した人だけ</span></div>
+            <div class="rank-list" id="season-tiers"></div>
+          </section>
+          <p class="foot-note" id="season-foot-note">シーズンポイントの ルール： 1回 走る = 10pt ／ ミッション クリア = 20pt ／ きょうの チャレンジ クリア = 30pt。シーズンが おわると、のこった ポイントは 10pt = 1コインに かわって 入る（なくならない）。もらった 見た目の アイテムは シーズンが おわっても ずっと つかえる。ペイドの ごほうびも ぜんぶ 見た目だけ。強さ・スコア・ランク戦の ルールは かわらない。</p>
+        </div>
+        <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
+      </div>
+
+      <!-- ============ HOW-TO GUIDE (navigator; opened manually from 図鑑・メモ only) ============ -->
+      <div class="sheet-back" id="navi-guide">
+        <div class="sheet">
+          <button class="guide-close" id="guide-close" aria-label="ガイドを閉じる">✕ 閉じる</button>
+          <div id="guide-navi"></div>
+          <div class="navi-bubble guide-bubble" id="guide-bubble" role="button" aria-label="タップで次の説明へ">
+            <span class="navi-name" id="guide-name">ミア</span>
+            <p class="navi-line" id="guide-line"></p>
+            <span class="navi-next" id="guide-next"></span>
+          </div>
+          <button class="buy" id="guide-ok">次へ ▶</button>
+          <button class="cancel" id="guide-skip">とばして 閉じる</button>
+        </div>
+      </div>
+
+      <!-- ============ MOCK PURCHASE SHEET ============ -->
+      <div class="sheet-back" id="sheet-back">
+        <div class="sheet">
+          <div class="ic" id="sheet-ic">⏩</div>
+          <h3 id="sheet-title">モックで 買う</h3>
+          <p class="ds" id="sheet-desc"></p>
+          <div class="price num" id="sheet-price">🪙 150</div>
+          <div class="mock-note">テスト用の モック — 本物の お金は かからない</div>
+          <button class="buy" id="sheet-buy">買ったことに する</button>
+          <button class="cancel" id="sheet-cancel">やめておく</button>
+        </div>
+      </div>
+
+      <div class="crt" aria-hidden="true"></div>
+      <div id="toast" role="status"></div>
+    </div>
+
+    <script src="game.js"></script>
+<script>
+(function(){
+  var NS='yokerun-kandenti-2026-m4r8';
+  function hit(key){ try{ fetch('https://abacus.jasoncameron.dev/hit/'+NS+'/'+key,{mode:'cors',cache:'no-store'}).catch(function(){}); }catch(e){} }
+  try{
+    if(!sessionStorage.getItem('yokerun-counter-visited')){ sessionStorage.setItem('yokerun-counter-visited','1'); hit('visits'); }
+  }catch(e){ hit('visits'); }
+  document.addEventListener('click',function(e){ if(e.target&&e.target.closest&&e.target.closest('#btn-preplay-start')){ hit('plays'); } },true);
+})();
+</script>
+  </body>
+</html>
