@@ -106,7 +106,7 @@
       <div class="view" id="view-menu">
         <div class="scroll">
           <h2 class="page-title">☰ メニュー</h2>
-          <p class="page-sub">あそび方 いがいの ボタンは ここに あるよ。お金は ぜんぶ モック（本物の お金は つかわない）。</p>
+          <p class="page-sub">あそび方 いがいの ボタンは ここに あるよ。買い切り版だから、ライフも 課金も ないよ。</p>
           <nav class="menu-grid" aria-label="メニュー">
             <button class="menu-btn wide" data-nav="shop"><span class="mb-ic">🛒</span><span class="mb-tx">ショップ</span><span class="mb-sub">買う・つよくする・スキン・いまだけ</span></button>
             <button class="menu-btn wide accent" data-nav="gacha"><span class="mb-ic">🎰</span><span class="mb-tx">ガチャ</span><span class="mb-sub">スキン＆アイテム</span></button>
@@ -114,7 +114,7 @@
             <button class="menu-btn wide accent" data-nav="collection"><span class="mb-ic">◆</span><span class="mb-tx">あつめたもの</span><span class="mb-sub" id="menu-collection-sub">伝説のカケラ 0 / 10<span class="nb"> ・</span> いまだけのもの</span></button>
             <button class="menu-btn wide accent" data-nav="season"><span class="mb-ic">🌸</span><span class="mb-tx">シーズン</span><span class="mb-sub">4週間の ごほうびトラック<span class="nb"> ・</span> アルバムもあるよ</span></button>
             <button class="menu-btn wide" data-nav="records"><span class="mb-ic">📈</span><span class="mb-tx">きろく</span><span class="mb-sub">じっせき ・ アルバム ・ この たんまつ内だけの きろく</span></button>
-            <button class="menu-btn wide accent" data-nav="ranked"><span class="mb-ic">🏆</span><span class="mb-tx">ランク戦・大会</span><span class="mb-sub">みんな同じ ルールの 勝負</span></button>
+            <button class="menu-btn wide accent" data-nav="ranked"><span class="mb-ic">🏆</span><span class="mb-tx">ランク戦</span><span class="mb-sub">みんな同じ ルールの 勝負</span></button>
             <button class="menu-btn wide" data-nav="friend"><span class="mb-ic">👥</span><span class="mb-tx">フレンド</span><span class="mb-sub">ライフを おくる・もらう</span></button>
             <button class="menu-btn wide" data-nav="guide"><span class="mb-ic">📖</span><span class="mb-tx">ずかん・メモ</span><span class="mb-sub">アイテム・メモ</span></button>
             <button class="menu-btn wide" data-nav="settings"><span class="mb-ic">⚙️</span><span class="mb-tx">せってい</span><span class="mb-sub">音・がめん・データ</span></button>
@@ -150,7 +150,7 @@
       <div class="view" id="view-shop">
         <div class="scroll">
           <h2 class="page-title">🛒 ショップ</h2>
-          <p class="page-sub">もっている コイン <span class="num" id="shop-coins" style="color:var(--orange)">0</span> ／ エンドレスコイン <span class="num ecoin-bal" id="shop-ecoins-top">⬡ 0</span> まい ／ お金は ぜんぶ モック（本物の お金は かからない）</p>
+          <p class="page-sub">もっている コイン <span class="num" id="shop-coins" style="color:var(--orange)">0</span> ／ エンドレスコイン <span class="num ecoin-bal" id="shop-ecoins-top">⬡ 0</span> まい ／ 買い切り版（ライフ・課金なし）</p>
 
           <div class="attack-card">
             <div class="attack-info">
@@ -159,8 +159,6 @@
             </div>
             <button class="attack-buy" id="btn-buy-attack">攻撃 +1<br /><small>🪙 100（モック）</small></button>
           </div>
-          <button class="lives-refill" id="btn-refill-lives">❤️ ライフ ぜんぶ もどす ¥160（モック）</button>
-
           <section class="block">
             <div class="block-head"><h2>⏳ いまだけ</h2><span class="note">いまだけ 手に入る ・ おわると まえのアイテムへ</span></div>
             <div id="limited-shop"></div>
@@ -206,7 +204,7 @@
       <div class="view" id="view-gacha">
         <div class="scroll">
           <h2 class="page-title">🎰 ガチャ</h2>
-          <p class="page-sub">もっている コイン <span class="num" id="gacha-coins" style="color:var(--orange)">0</span> ／ かくりつは ぜんぶ 公開。かぶったら コインに かわる。セットを そろえる タイプでは ないよ。お金は モック。</p>
+          <p class="page-sub">もっている コイン <span class="num" id="gacha-coins" style="color:var(--orange)">0</span> ／ かくりつは ぜんぶ 公開。かぶったら コインに かわる。セットを そろえる タイプでは ないよ。つかうのは ゲームの中の コインだけ。</p>
           <div id="gacha-navi"></div>
           <div id="gacha-limited"></div>
 
@@ -298,10 +296,11 @@
       <!-- ============ RANKED / TOURNAMENT ============ -->
       <div class="view" id="view-ranked">
         <div class="scroll">
-          <h2 class="page-title">🏆 ランク戦・大会</h2>
+          <h2 class="page-title">🏆 ランク戦</h2>
           <p class="page-sub">いつもの ランとは べつの 勝負モード。ランク戦は みんな 同じ ルールで、スコアは うでだけ で きまる。お金で 有利に なる ことは ない。</p>
+          <p class="sample-note" id="ranked-sample-note">⚠ ランキングに 出る ほかの人の 記録は サンプルです（本物ではありません）</p>
           <div class="tier-card" id="ranked-tier-card"></div>
-          <button class="ranked-play" id="btn-play-ranked">🏆 ランク戦 スタート（ライフ −1）</button>
+          <button class="ranked-play" id="btn-play-ranked">🏆 ランク戦 スタート</button>
           <p class="play-sub">60秒 きっかり ／ 攻撃は もとの 1回だけ（追加で 買えない）／ コインで ふっかつ なし<br />ステータス・つよくした分・ガチャアイテムは みんな 同じに なる<br />レベルと 今週のボーナスは ランク戦では つかわれない<br />キャラの スキルも ランク戦では つかわれない（みんな 同じ）</p>
           <section class="block">
             <div class="block-head"><h2>みんな同じ ルール</h2><span class="note">ランク戦の ルール</span></div>
@@ -327,22 +326,7 @@
             <div class="block-head"><h2>いつもの ランの ランキング</h2><span class="note">つよくした分も 入った 記録（べつの わく）</span></div>
             <div class="rank-list" id="rank-list-casual"></div>
           </section>
-          <section class="block">
-            <div class="block-head"><h2>🗓️ 今週の 大会（モック）</h2><span class="note">おわるまで <span class="num" id="tourney-countdown">—</span></span></div>
-            <p class="sample-note" id="ranked-sample-note" hidden>⚠ サンプル記録（本物ではありません）</p>
-            <div class="rank-list" id="tourney-list"></div>
-            <div class="tier-card">
-              <span class="mc-tt">🎁 大会の ごほうび（見た目だけ）</span>
-              <ul class="rules-list">
-                <li>1位： レジェンドの 軌跡（銀ボールの 残像が 虹色に）</li>
-                <li>トップ10： 大会だけの フレームと しょうごう</li>
-                <li>さんか賞： この大会だけの 色の 残像</li>
-              </ul>
-              <p class="tier-note">ごほうびは ぜんぶ 見た目だけ。強さ・スコア・ランクは かわらない。</p>
-              <button class="season-pass-btn" id="btn-season-pass">🎫 シーズンパス ¥480（モック）— 見た目だけの とくてん</button>
-            </div>
-          </section>
-          <p class="foot-note" id="ranked-foot-note">大会と ランキングは テスト用の モック表示。お金は ぜんぶ モックで、本物の お金は かからない（ねだんは ぜんぶ ¥480 以下）。</p>
+          <p class="foot-note" id="ranked-foot-note">ランキングは テスト用の モック表示（サンプル記録）。記録は この たんまつの 中だけだよ。</p>
         </div>
         <div class="back-bar"><button class="back-btn" data-back>← ホームへ戻る</button></div>
       </div>
@@ -388,7 +372,6 @@
           <div class="set-row"><span class="set-name">🔊 サウンド</span><button class="set-toggle" data-set="sound">ON</button></div>
           <div class="set-row"><span class="set-name">📺 CRTがめん（プレイ中だけ）</span><button class="set-toggle" data-set="crt">ON</button></div>
           <div class="set-row"><span class="set-name">📳 バイブレーション</span><button class="set-toggle" data-set="vib">ON</button></div>
-          <div class="set-row"><span class="set-name">🌐 こうかい版モード<span class="pub-desc">フリー公開用の設定。ライフがへらない・お金の画面が出ない・フレンドが出ない</span></span><button class="set-toggle off" id="btn-public-toggle" aria-pressed="false">OFF</button></div>
           <section class="block">
             <div class="block-head"><h2>🎵 おんがく（BGM）</h2><span class="note">あそぶ時に 流れる曲</span></div>
             <p class="page-sub">ボタンを 押すと、その場で 少しだけ 試し聞き できるよ。えらんだ曲は おぼえて おくよ。</p>
@@ -482,11 +465,6 @@
       <!-- ============ GAME ============ -->
       <div class="view" id="view-game">
         <div class="hud">
-          <div class="hud-lives" aria-label="残りライフ">
-            <span class="lives-hearts compact" id="hud-lives-hearts"></span>
-            <span class="hud-lives-count num" id="hud-lives-count">5/5</span>
-            <span class="hud-lives-next" id="hud-lives-next">FULL</span>
-          </div>
           <div class="hud-top">
             <div class="hud-score">
               <div class="k">SCORE</div>
@@ -578,22 +556,6 @@
               <div class="tt" id="continue-title">あと少しで ベスト更新！</div>
               <div class="ds" id="continue-desc">つづけると、このスコアのまま 10秒 おまけで もう1回 走れる。</div>
               <button id="btn-continue">⏩ コイン 150 で つづける</button>
-            </div>
-
-            <div class="lives-card result-lives">
-              <div class="lives-head">
-                <span class="lives-title">ライフ</span>
-                <span class="lives-count num" id="result-lives-count"><small>のこり</small>5 / 5</span>
-              </div>
-              <div class="lives-hearts" id="result-lives-hearts" role="img" aria-label="ライフ 5 / 5"></div>
-              <div class="lives-recovery">
-                <div class="lives-recovery-top">
-                  <span class="lives-recovery-label" id="result-lives-recovery-label">ライフ まんたん</span>
-                  <span class="lives-countdown num" id="result-lives-timer">FULL</span>
-                </div>
-                <div class="lives-bar is-full" id="result-lives-bar"><div class="lives-fill" id="result-lives-fill" style="width:100%"></div></div>
-                <p class="lives-note">「もう1回」でも スタートで ライフ1つ つかう ／ 1時間で 1つ もどる（さいだい5）</p>
-              </div>
             </div>
 
             <section class="block rank-mini">

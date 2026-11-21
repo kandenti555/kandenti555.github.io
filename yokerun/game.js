@@ -60,12 +60,12 @@
         return s;
       })();
       function persist(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
-      /* ---- こうかい版モード (public / free-release mode): a display-and-rules
-         switch only. When ON: lives are never consumed, every ¥-priced mock
-         purchase surface is hidden, the friend page is unreachable, and the
-         ranked page labels other players' records as samples. When OFF the
-         game behaves exactly as before. No prices, caps or odds change. ---- */
-      function publicMode(){ return !!(save.settings && save.settings.public); }
+      /* ---- DL版（BOOTH買い切り版）: この配布ビルドでは publicMode は常時ON。
+         ライフは へらない（ライフ制そのものを なくした）、¥表記の購入画面は
+         一切出ない、フレンドページには 行けない、大会は ない。
+         ランキングの ほかの人の記録は サンプル表示であることを 明示する。
+         設定画面の こうかい版モード スイッチも DL版では 取り除いてある。 ---- */
+      function publicMode(){ return true; }
       // streak: consecutive days played
       (function(){
         function dayStr(d){ return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate(); }
@@ -891,18 +891,6 @@
       function tierOf(rating){ var t = TIERS[0]; TIERS.forEach(function(x){ if (rating >= x.min) t = x; }); return t; }
       function nextTier(rating){ for (var i = 0; i < TIERS.length; i++) if (rating < TIERS[i].min) return TIERS[i]; return null; }
       function ratingDelta(score){ return Math.max(-30, Math.min(60, Math.floor(score / 80) - 15)); }
-      function tourneyEnd(){
-        var d = new Date();
-        var e = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        var add = (8 - e.getDay()) % 7; if (add === 0) add = 7;
-        e.setDate(e.getDate() + add);
-        return e;
-      }
-      function tourneyCountdownText(){
-        var s = Math.max(0, Math.floor((tourneyEnd() - new Date()) / 1000));
-        var dd = Math.floor(s / 86400), hh = Math.floor(s % 86400 / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
-        return "あと " + dd + "日 " + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm + ":" + (ss < 10 ? "0" : "") + ss;
-      }
       function renderRanked(){
         var box = $("ranked-tier-card"); if (!box) return;
         var r = rk(); var t = tierOf(r.rating); var nt = nextTier(r.rating);
@@ -910,24 +898,14 @@
           '<div class="tier-rating">レーティング <span class="num">' + r.rating.toLocaleString() + '</span> pt ／ ランク戦 ベスト <span class="num">' + r.best.toLocaleString() + '</span> ／ ランク戦 ' + r.plays + ' 回</div>' +
           (nt ? '<div class="xp-bar"><div class="xp-fill" style="width:' + Math.min(100, Math.max(0, Math.round((r.rating - t.min) / (nt.min - t.min) * 100))) + '%"></div></div><div class="tier-note">つぎの ランク（' + nt.name + '）まで あと ' + (nt.min - r.rating) + ' pt</div>' : '<div class="tier-note">いちばん上の ランクに とどいた！ 👑</div>') +
           '<div class="tier-note">' + r.lastNote + '</div>';
-        var tc = $("tourney-countdown"); if (tc) tc.textContent = tourneyCountdownText();
         renderRanking($("rank-list-ranked"), r.best, false);
         renderRanking($("rank-list-casual"), save.best, save.bestRevived);
-        renderRanking($("tourney-list"), r.best, false);
-        var sp = $("btn-season-pass");
-        if (sp){
-          sp.style.display = publicMode() ? "none" : "";
-          sp.disabled = !!r.seasonPass;
-          sp.innerHTML = r.seasonPass ? "✓ シーズンパス つかっている（見た目だけ）" : "🎫 シーズンパス ¥480（モック）—<br />見た目だけの とくてん";
-        }
         var rp = $("btn-play-ranked");
-        if (rp) rp.textContent = publicMode() ? "🏆 ランク戦 スタート" : "🏆 ランク戦 スタート（ライフ −1）";
+        if (rp) rp.textContent = "🏆 ランク戦 スタート";
         var sn = $("ranked-sample-note");
-        if (sn) sn.hidden = !publicMode();
+        if (sn) sn.hidden = false;
         var fn = $("ranked-foot-note");
-        if (fn) fn.textContent = publicMode()
-          ? "大会と ランキングは テスト用の モック表示。"
-          : "大会と ランキングは テスト用の モック表示。お金は ぜんぶ モックで、本物の お金は かからない（ねだんは ぜんぶ ¥480 以下）。";
+        if (fn) fn.textContent = "ランキングは テスト用の モック表示（サンプル記録）。記録は この たんまつの 中だけだよ。";
       }
 
       /* ================= PERIOD-LIMITED ITEMS + LEGEND FRAGMENTS =================
@@ -1364,9 +1342,9 @@
       var SEASON_MS = 28 * 24 * 3600 * 1000;
       var SEASON_TIER_PTS = [0,20,50,90,140,200,270,350,440,540,650,770,900,1040,1190,1350,1520,1700,1890,2090];
       var SEASON_FREE = [
-        {t:"coins",n:30},{t:"coins",n:40},{t:"coins",n:50},{t:"coins",n:60},{t:"life"},
+        {t:"coins",n:30},{t:"coins",n:40},{t:"coins",n:50},{t:"coins",n:60},{t:"coins",n:100},
         {t:"coins",n:70},{t:"variant",id:"base_v"},{t:"coins",n:80},{t:"coins",n:90},{t:"coins",n:100},
-        {t:"coins",n:110},{t:"life"},{t:"coins",n:120},{t:"variant",id:"star_v"},{t:"coins",n:130},
+        {t:"coins",n:110},{t:"coins",n:150},{t:"coins",n:120},{t:"variant",id:"star_v"},{t:"coins",n:130},
         {t:"coins",n:140},{t:"coins",n:150},{t:"coins",n:160},{t:"coins",n:180},{t:"coins",n:200}
       ];
       var SEASON_PAID = [
@@ -3643,12 +3621,11 @@
         this.setAttribute("aria-expanded", open ? "true" : "false");
         this.textContent = open ? "とじる ▴" : "くわしく見る ▾";
       });
-      $("btn-refill-lives").addEventListener("click", function(){ openLivesSheet(); });
       $("btn-status-reset").addEventListener("click", function(){
         save.status = { speed:0, magnet:0, luck:0, shield:0, score:0 }; persist(); renderAll();
         toast("ステータスを もどした（お金は いらない）。" + statusRemaining() + " pt ふやし直せる");
       });
-      setInterval(function(){ refreshLives(); renderLives(); if (ensurePeriods()){ renderDaily(); renderPreRun(); } var tc2 = $("tourney-countdown"); if (tc2 && views.ranked.classList.contains("active")) tc2.textContent = tourneyCountdownText(); var fm2 = $("friend-my-lives"); if (fm2 && views.friend.classList.contains("active")) fm2.textContent = save.lives + " / " + LIVES_MAX + (save.lives >= LIVES_MAX ? "（まんたん）" : ""); var L3 = curLimited(); Array.prototype.forEach.call(document.querySelectorAll(".js-limited-cd"), function(el){ el.textContent = countdownText(L3.end); }); var LG3 = curLegend(); Array.prototype.forEach.call(document.querySelectorAll(".js-legend-cd"), function(el){ el.textContent = countdownText(LG3.end); }); }, 1000);
+      setInterval(function(){ refreshLives(); renderLives(); if (ensurePeriods()){ renderDaily(); renderPreRun(); } var fm2 = $("friend-my-lives"); if (fm2 && views.friend.classList.contains("active")) fm2.textContent = save.lives + " / " + LIVES_MAX + (save.lives >= LIVES_MAX ? "（まんたん）" : ""); var L3 = curLimited(); Array.prototype.forEach.call(document.querySelectorAll(".js-limited-cd"), function(el){ el.textContent = countdownText(L3.end); }); var LG3 = curLegend(); Array.prototype.forEach.call(document.querySelectorAll(".js-legend-cd"), function(el){ el.textContent = countdownText(LG3.end); }); }, 1000);
       $("btn-home").addEventListener("click", function(){ showView("home"); renderAll(); });
       $("btn-continue").addEventListener("click", function(){
         var cost = reviveCost();
@@ -3785,14 +3762,6 @@
       Array.prototype.forEach.call(document.querySelectorAll("[data-nav]"), function(b){
         b.addEventListener("click", function(){ var tgt = b.getAttribute("data-nav"); audio(); if (tgt === "friend" && publicMode()) return; if (tgt === "friend") enterFriendPage(); showView(tgt); renderAll(); });
       });
-      $("btn-public-toggle").addEventListener("click", function(){
-        if (!save.settings) save.settings = { sound:true, crt:true, vib:true, bgm:"pop", public:false };
-        save.settings.public = !save.settings.public; persist(); renderAll();
-        toast(save.settings.public
-          ? "こうかい版モード ON： ライフは むげん・お金の画面と フレンドは 出ないよ"
-          : "こうかい版モード OFF： いつもの 設定に もどったよ");
-        if (save.settings.public) sfx.buy();
-      });
       Array.prototype.forEach.call(document.querySelectorAll("[data-back-preplay]"), function(b){
         b.addEventListener("click", function(){ showView("home"); openPreplay(); });
       });
@@ -3828,17 +3797,6 @@
         toast("フレンドに ライフを リクエストした（モック）— つぎに このページを 開くと とどくよ");
       });
       $("btn-play-ranked").addEventListener("click", function(){ tryStartRun("ranked"); });
-      $("btn-season-pass").addEventListener("click", function(){
-        if (publicMode()) return;   // こうかい版モード: ¥の購入画面は 出さない
-        var r = rk();
-        if (r.seasonPass){ toast("シーズンパスは もう つかっている（見た目だけ）"); return; }
-        openSheet({
-          ic:"🎫", title:"シーズンパス（見た目だけ）",
-          desc:"大会だけの 軌跡や フレームなど、見た目だけの とくてん。強さ・スコア・ランクは かわらない。ねだんは 買う前に 見られて、ぜんぶ ¥480 以下。",
-          price:"¥480", buyLabel:"シーズンパスを 買ったことに する",
-          onBuy: function(){ rk().seasonPass = true; persist(); renderAll(); toast("シーズンパスが つかえるように なった（モック）— とくてんは 見た目だけ"); }
-        });
-      });
       $("guide-ok").addEventListener("click", advanceGuide);
       var ogBtn = $("btn-open-guide"); if (ogBtn) ogBtn.addEventListener("click", function(){ openGuide(); });
       $("guide-skip").addEventListener("click", closeGuide);
