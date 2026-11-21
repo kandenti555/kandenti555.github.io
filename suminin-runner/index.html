@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>すみ忍ランナー</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="stage-shell" id="stageShell">
+       <div class="stage-rotator" id="stageRotator">
+        <div class="stage-frame">
+          <div class="stage" id="stage">
+          <canvas id="game" width="960" height="540" aria-label="すみ忍ランナーのゲーム画面"></canvas>
+
+          <div class="hud" aria-hidden="true">
+            <span><span class="lbl">距離</span><span class="num" id="hudDist">0</span>m</span>
+            <span><span class="lbl">スコア</span><span class="num" id="hudScore">0</span></span>
+            <span><span class="lbl">倍率</span><span class="num" id="hudMult">×1.0</span></span>
+            <span><span class="lbl">ニアミス</span><span class="num" id="hudNear">0</span></span>
+            <span class="spacer"></span>
+            <span class="hud-secondary"><span class="lbl">速度</span><span class="num" id="hudSpeed">0</span>px/s</span>
+            <span><span class="lbl">反応猶予 T</span><span class="num tval ok" id="hudT">—</span></span>
+          </div>
+
+          <div class="dashgauge" id="dashGauge">
+            ドロン（ダッシュ）
+            <div class="bar"><div class="fill" id="dashFill"></div></div>
+          </div>
+          <div class="inkgauge" id="inkGauge">
+            <span id="inkLabel">墨 0／200</span>
+            <div class="bar"><div class="fill" id="inkFill"></div></div>
+          </div>
+          <div class="invgauge" id="invGauge" style="visibility:hidden">
+            <span id="invLabel">無敵 5.0秒</span>
+            <div class="bar"><div class="fill" id="invFill"></div></div>
+          </div>
+          <div class="wavegauge" id="waveGauge" style="visibility:hidden">
+            <span id="waveLabel">波乗り 50m</span>
+            <div class="bar"><div class="fill" id="waveFill"></div></div>
+          </div>
+          <div class="missiongauge" id="missionGauge"><span id="missionLabel"></span></div>
+          <div class="bunshingauge" id="bunshinGauge" style="visibility:hidden">変わり身の術 ◐ 身代わりあり</div>
+          <div class="missionbanner" id="missionBanner"><span class="mk">巻物</span><span id="missionBannerText"></span></div>
+          <div class="bandbanner" id="bandBanner"></div>
+          <div class="chunkinfo" id="chunkInfo"></div>
+
+          <div class="sysbtns">
+            <button type="button" id="btnMain">スタート</button>
+            <button type="button" id="btnPause">一時停止</button>
+            <button type="button" id="btnSound">音：オン</button>
+          </div>
+
+          <div class="touchbtns touch-left">
+            <button type="button" class="btn-dash" id="btnDash" aria-label="ドロン（ダッシュ）">ドロン<small>DASH</small></button>
+          </div>
+          <div class="touchbtns touch-right">
+            <button type="button" class="btn-jump" id="btnJump" aria-label="ジャンプ">跳<small>JUMP</small></button>
+          </div>
+
+          <div class="overlay" id="ovTitle">
+            <p class="ttl">すみ忍、走る。</p>
+            <p class="sub">障害物に当たれば終わり。落とし穴に落ちても終わり。火遁の巻物を取れば、周囲を回る5つの火の玉が障害物を自動で追いかけて消してくれる（1個につき+100）。水遁の巻物は50mの波乗り、風遁の巻物は前方へ竜巻を放つ。すれすれ回避は「ニアミス」で倍率が上がる。右ボタン＝ジャンプ、左ボタン＝ドロン。</p>
+            <div class="keys">
+              <span><b>Space / ↑</b> ジャンプ（長押しで高く・空中でもう一度で2段ジャンプ）</span>
+              <span><b>Shift / K</b> ドロン</span>
+              <span><b>P</b> 一時停止</span>
+            </div>
+            <button type="button" class="bigbtn" id="btnStart">出 発</button>
+            <button type="button" class="ghostbtn" id="btnTitles">称号一覧</button>
+            <p class="wide-hint">横画面がおすすめ（縦持ちでは画面が回転表示になります）</p>
+            <p class="seedline" id="titleSeed"></p>
+          </div>
+
+          <div class="overlay" id="ovOver" hidden>
+            <div class="result-panel">
+            <p class="ttl" id="overTitle">任務終了</p>
+            <div class="resultgrid">
+              <span>距離 <span class="num" id="resDist">0</span>m</span>
+              <span>スコア <span class="num" id="resScore">0</span></span>
+              <span>ニアミス <span class="num" id="resNear">0</span>回</span>
+              <span>破壊 <span class="num" id="resBreak">0</span>個</span>
+              <span>墨玉 <span class="num" id="resOrbs">0</span>個</span>
+              <span>おにぎり <span class="num" id="resOnigiri">0</span>個</span>
+              <span>変わり身救済 <span class="num" id="resBunshin">0</span>回</span>
+              <span>波消去 <span class="num" id="resWave">0</span>個</span>
+              <span>竜巻消去 <span class="num" id="resFuuton">0</span>個</span>
+              <span>最高倍率 <span class="num" id="resMult">×1.0</span></span>
+            </div>
+            <p class="missionline" id="resMission"></p>
+            <p class="bestline" id="overBest"></p>
+            <div class="titleline">
+              <span class="rakkan" id="resSeal">修</span>
+              <span class="titlename">称号「<span id="resTitleName">修行中</span>」</span>
+            </div>
+            <p class="newtitle" id="resNewTitle" hidden></p>
+            <p class="sub" id="overReason"></p>
+            <p class="deathcomment" id="overComment"></p>
+            <div class="btnrow">
+              <button type="button" class="bigbtn" id="btnRestart">再スタート</button>
+            </div>
+            <div class="btnrow result-subbtns">
+              <button type="button" class="ghostbtn" id="btnTitlesFromOver">称号一覧</button>
+              <button type="button" class="ghostbtn" id="btnToTitle">オープニングへ戻る</button>
+            </div>
+            </div>
+          </div>
+
+          <div class="overlay" id="ovPause" hidden>
+            <p class="ttl">一時停止</p>
+            <button type="button" class="bigbtn" id="btnResume">再 開</button>
+          </div>
+
+          <div class="overlay" id="ovTitles" hidden>
+            <div class="titles-panel">
+              <p class="ttl">称号一覧</p>
+              <p class="titles-count" id="titlesCount"></p>
+              <div class="titles-list" id="titlesList"></div>
+              <button type="button" class="bigbtn" id="btnTitlesClose">戻 る</button>
+            </div>
+          </div>
+          </div>
+        </div>
+       </div>
+      </div>
+
+    <div class="wrap">
+      <header class="top">
+        <h1>すみ忍<span class="aka">ランナー</span></h1>
+        <p>自動で走り続けるすみ忍を、ジャンプとドロン（ダッシュ）で導くエンドレスランナー。コースは毎回ランダム生成。</p>
+      </header>
+
+      <div class="controls">
+        <div class="seedbox">
+          <label for="seedInput">シード</label>
+          <input id="seedInput" inputmode="numeric" autocomplete="off" placeholder="数字を入力" />
+          <button type="button" id="btnSeedGo">このコースで開始</button>
+        </div>
+      </div>
+
+      <section class="block">
+        <h2>遊び方</h2>
+        <div class="howto">
+          <div class="item">
+            <h3><span class="k">跳</span>ジャンプ</h3>
+            <p>右ボタン／Space。押しっぱなしで高く跳び、早く離すと低く落ちる（可変ジャンプ）。空中でもう一度押すと2段ジャンプ（1段目の95%の力で、落下中でも落下速度をリセットして再上昇。足場から走り落ちたあとでも1回使える）。足場を離れた直後や、着地する少し前に入力しても受け付ける許容つき。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">遁</span>ドロン（ダッシュ）</h3>
+            <p>左ボタン／Shift。煙とともに前方へ瞬間移動気味に加速し、空中では落下が止まる。広い落とし穴越えと木箱破壊に。使ったあとはゲージ回復まで待つ。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">火</span>火遁（火の玉）</h3>
+            <p>たまに現れる炎の巻物（出現はチャンクごとのランダム抽選で決まるため間隔は読めないが、平均すると従来どおり20チャンクに1個ほど。出なさすぎ・続きすぎを防ぐ最低／最大間隔のガードつき）。取ると、すみ忍の周囲に5つの火の玉が現れてぐるぐる回る（玉の数が残りの回数）。前方に障害物（木箱・岩・竹槍・落下岩・敵忍者）が見えた時点で、玉が1つ自動で飛んでいき、高速で追尾して自機が着くずっと前にその障害物を1個消す。消すと+100点で、破壊数と倍率カウントにも入る。5個消したら終わり。玉がある間に取り直すと5個に回復する（それ以上は貯まらない）。おにぎりの無敵や変わり身の術とは別々に働く。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">水</span>水遁（波乗り）</h3>
+            <p>たまに現れる水色の巻物（出現は火遁と同じレア枠のチャンク抽選で、到達可能性検証つき。トラップチャンクには置かない）。取ると大きな波に乗って50m進む。波乗り中は、地上の障害物（木箱・岩・竹槍・着地した落下岩）に触れても波が押し流して消してくれる（1個につき+100点、破壊数と倍率にも入る）。敵忍者も流されて撃破扱いになる。落とし穴は波が上を渡るので落ちない。波が終わる地点の先が危ない場合は、安全な場所まで波が少しだけ伸びてから終わる（終わり際の理不尽な即死はない）。火遁の火の玉とは別々に働くので、波乗り中も火の玉は通常どおり障害物を追いかける。残りの波乗り距離は左上の青いゲージに出る。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">風</span>風遁（竜巻）</h3>
+            <p>たまに現れる風色の巻物（出現は水遁と同じレア枠のチャンク抽選で、到達可能性検証つき。トラップチャンクには置かない）。取った瞬間に、前方へ竜巻を1発放つ。竜巻はすみ忍より速く前へ進みながら、進路上の障害物をすべて巻き上げて消していく（木箱・岩・竹槍・落下岩・敵忍者すべて対象、1個につき+100点、破壊数と撃破数にも入る）。ただし落とし穴だけは地形なので消せない——穴は跳ぶか波乗りで越えるしかない。竜巻は画面の先へ進み続け、約200m進んだところで消える。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">穴</span>落とし穴</h3>
+            <p>地面に開いた暗い穴。狭い穴はジャンプで、広い穴はジャンプ＋ドロンで渡る。落ちると、すみ忍は穴の中へ落ち続けながら薄れて消えていき、消えたところで終了（死因「落とし穴に落ちた」）。穴の幅は、ゲーム内と同じ物理で渡り切れることを生成時に検証している。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">飯</span>おにぎり（無敵）</h3>
+            <p>たまに現れるレアアイテム（出現はチャンクごとのランダム抽選で決まるため間隔は読めないが、平均すると従来どおり20チャンクに1個ほど。出なさすぎ・続きすぎを防ぐ最低／最大間隔のガードつき）。取ると5秒間無敵になり、木箱・岩・竹槍・落下岩・敵忍者に触れても死なずにすり抜ける（壊れはしない。壊すのは火遁の役目）。ただし落とし穴は地形なので、無敵でも落ちれば終わる。無敵中は金の縁取りが付き、左上に残り時間が出る。終わる1秒前から縁取りが点滅する。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">墨</span>墨の濃さ</h3>
+            <p>すみ忍の墨は、そのランの中で育つ。毎ラン薄いグレーから始まり、墨玉を取るごとに少しずつ濃くなって、200個で元の真っ黒になる（目帯の白は白のまま）。変化は序盤速めで、最初の数個でも濃さが目に見えて変わる。200個に届いた瞬間は「真っ黒！」のご褒美（墨が弾ける演出＋200点）。200個を超えた分では、真っ黒のまま周囲へ墨のオーラが広がっていく（400個で最大）。ランが終われば次はまた薄い色から。長く走って墨を集めるのが、もうひとつの目標になる。進捗はラン中、左上の「墨」ゲージに出る。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">巻</span>巻物チャレンジ</h3>
+            <p>ラン開始時にミッションが1つ出る（例：墨玉を○○個集める／ニアミス○回／障害物を○個壊す／○○m走り抜ける／おにぎりを取る）。目標は「いいランなら届く」範囲で毎回ランダム。達成するとその場で+300点、ランはそのまま続く。進捗は左上に小さく出て、結果画面にも達成／未達が残る。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">景</span>景色の移ろい</h3>
+            <p>距離で景色が変わる。竹林（0〜300m）→岩場（〜700m）→夕景（〜1200m）→月夜（〜1600m）の順で移ろい、1600mからは同じ順でもう一周する（「竹林 二周目」のように表示）。境目は約50mかけて色が徐々に移り、新しい景色に入ると名前が小さく出る。2周目以降は難しい地形が増え、速度の上限も少しずつ上がっていく。コースの出方そのものも、障害物ラッシュや墨玉アークなど数種類の「パターン（流れ）」が不規則な長さで切り替わり続けるので、先の展開は読めない（切り替わっても画面には何も出ない）。右上の天体も景色に連動する：竹林・岩場では太陽、夕景では橙色の夕日、月夜では満月が浮かび、境目では色も姿もなめらかに移ろう。さらに、同じ地形の繰り返しでも障害物の位置や墨玉の並び方（列・弧・階段など）は毎回少しずつ変わり、休息の平地が来る間隔も決まっていない。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">身</span>変わり身の術（身代わり）</h3>
+            <p>めったに現れるアイテム（出現はチャンクごとのランダム抽選で決まるため間隔は読めないが、平均すると従来どおり25チャンクに1個ほど。出なさすぎ・続きすぎを防ぐ最低／最大間隔のガードつき）。取ると小さな分身が1体、後ろに半透明で付いて走る。所持中に木箱・岩・竹槍・落下岩・敵忍者へ致命的に当たると、変わり身の術が発動する：当たった場所に丸太がポンッと残って煙に消え、本体は無事に現れて約1秒の無敵を得て走り続けられる。落とし穴は身代わりの対象外（落ちたら従来どおり終わる）。ストックは最大1体で、すでに持っている時に取ると+100点になる。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">敵</span>敵忍者</h3>
+            <p>赤黒い頭巾の敵忍者。すみ忍より一回り大きく（身長は約1.1倍）、前方から地面を走って向かってくるので、タイミングよく跳んでかわす。触れると終わり（死因は「敵忍者にやられた」）。おにぎりの無敵中は無事で、変わり身の身代わり対象にもなり、火遁の火の玉でも消せる。落とし穴の近くには出てこない。出現する場所は、1周目は月夜の帯（1200m以降）だけだが、2周目以降は景色の帯を問わず常時ランダムに現れる（間隔には下限があり、過密にはならない）。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">岩</span>落下岩（前方で落ちて障害物になる）</h3>
+            <p>落ちてくる岩は、すみ忍の前方（画面の右寄り）で落ちてきて、すみ忍が着く少し前に地面へ着き、そのまま通常の岩の障害物として残る。着地点は影と「！」で予告される：速く走っている時は、まず画面の右端に淡い影と「！」が先に現れて合図になり、近づくにつれて影が本当の着地点へ移っていく。落下そのものも、岩が画面に入ってから始まるので、落ちる様子が最初から見える。着地はいつも「あと少しで着く」距離で完了する（速度を上げても画面の外で落ち終わっていることはない）。落ちている最中に当たることはなく、着いた岩は跳んでかわす（当たれば終わり）。穴の上や他の障害物のそばには落ちないよう生成時に検証済みで、火遁の玉でも消せる。障害物ラッシュでは前方に時間差で複数落ちて、岩が並んだ区間になる。トラップ内の「揺れる落下岩」も同じ方式で、上空で待機している岩が揺れて予告してから決まった位置に落ち、障害物として残る。落下点がすみ忍を狙って動くことはない。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">際</span>ニアミス</h3>
+            <p>障害物をすれすれでかわすと「ニアミス」判定でスコア倍率アップ。安全なラインだけでは倍率は育たない。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">称</span>称号</h3>
+            <p>ランが終わると、その内容に応じた称号が付く。全40種あり、通常／レア／無理ゲー級の3段階。水遁・風遁に連動する称号や、火・水・風の3遁をそろえる称号もある。結果画面に出るのは、そのランで条件を満たした中で最もレアなもの。条件を満たした称号はすべて記録され、タイトル画面と結果画面の「称号一覧」で取得状況が見られる（未取得は「？？？」。無理ゲー級は条件も伏せてある）。結果画面からは「オープニングへ戻る」でタイトル画面にも戻れる。取得記録はこの端末に保存される。</p>
+          </div>
+          <div class="item">
+            <h3><span class="k">罠</span>悔しさトラップ</h3>
+            <p>たまに現れる意地悪な地形が4種（竹槍スレスレの墨玉列「罠玉ライン」／落とし穴の上空の宝「高台の宝」／揺れてから落ちる「揺れる落下岩」／木箱の直後の竹槍「箱の向こう」）。どれも罠のアイテムを取らない安全な正解ルートが必ずあり、生成時に物理シミュレーションで検証済み。欲張って危ないラインを通ると死ぬ。トラップの地形の中で死ぬと、結果画面の一言は死因によらず「欲をかいた。」になる。</p>
+          </div>
+        </div>
+      </section>
+
+
+      <footer>すみ忍ランナー — ベスト記録はこのタブを開いている間だけ保持されます。プレイ計測と称号の取得記録のみ、この端末の localStorage に保存されます（外部送信なし）。</footer>
+    </div>
+
+    <script src="game.js"></script>
+<script>
+(function(){
+  var NS='suminin-runner-kandenti-2026-r7n3';
+  function hit(key){ try{ fetch('https://abacus.jasoncameron.dev/hit/'+NS+'/'+key,{mode:'cors',cache:'no-store'}).catch(function(){}); }catch(e){} }
+  try{
+    if(!sessionStorage.getItem('suminin-counter-visited')){ sessionStorage.setItem('suminin-counter-visited','1'); hit('visits'); }
+  }catch(e){ hit('visits'); }
+  document.addEventListener('click',function(e){ if(e.target&&e.target.closest&&e.target.closest('#btnStart,#btnRestart')){ hit('plays'); } },true);
+})();
+</script>
+  </body>
+</html>

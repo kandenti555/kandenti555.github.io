@@ -1,0 +1,508 @@
+      :root {
+        --paper: #f3ecdc;
+        --paper-2: #ece2cb;
+        --ink: #211c14;
+        --ink-soft: #4c463a;
+        --ink-faint: #8a8172;
+        --accent: #b3372a;
+        --accent-ink: #8f2a20;
+        --card: #faf5e9;
+        --line: #d8cdb2;
+        --btn: #211c14;
+        --btn-text: #f5efdf;
+        --stage-frame: #211c14;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #171410;
+          --paper-2: #1e1a15;
+          --ink: #ece4d0;
+          --ink-soft: #c9bfa9;
+          --ink-faint: #948a76;
+          --accent: #e0685a;
+          --accent-ink: #e0685a;
+          --card: #221e18;
+          --line: #3a342a;
+          --btn: #ece4d0;
+          --btn-text: #211c14;
+          --stage-frame: #0c0a08;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+      }
+      button { font-family: inherit; cursor: pointer; }
+      button, [role="button"] { min-height: 2.75rem; }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 56px; }
+      header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; margin: 6px 2px 14px; }
+      header.top h1 {
+        font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+        font-weight: 800; font-size: clamp(1.55rem, 4.5vw, 2.3rem);
+        margin: 0; letter-spacing: .04em;
+      }
+      header.top h1 .aka { color: var(--accent); }
+      header.top p { margin: 0; color: var(--ink-soft); font-size: .92rem; }
+      .hanko {
+        display: inline-block; border: 2px solid var(--accent); color: var(--accent);
+        border-radius: 6px; padding: 1px 8px; font-weight: 900; font-size: .78rem;
+        letter-spacing: .18em; transform: rotate(-2deg);
+      }
+
+      /* ---------- stage ---------- */
+      /* 全画面: ステージはページ表示領域 (ビューポート) 全体を使う。余白・黒枠・
+         パディングは持たない。縦向きでは rotator を rotate(90deg) し、寸法は
+         CSS で縦横入替 (幅=100dvh / 高さ=100vw) にして、回転後の外形が
+         ビューポート全体と一致するようにする。横向きでは通常表示。 */
+      .stage-shell { position: relative; width: 100%; height: 100vh; height: 100dvh; }
+      body.rot-port .stage-shell { overflow: hidden; }
+      .stage-rotator { width: 100%; height: 100%; }
+      body.rot-port .stage-rotator {
+        position: absolute; left: 50%; top: 50%;
+        width: 100vh; width: 100dvh; height: 100vw;
+        transform: translate(-50%, -50%) rotate(90deg);
+        transform-origin: center center;
+      }
+      .stage-frame { height: 100%; }
+      .stage {
+        position: relative; width: 100%; height: 100%;
+        overflow: hidden; background: #f0e3c0;
+        touch-action: none; user-select: none; -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      /* プレイ用ボタン (スタート/一時停止/音) はステージ内オーバーレイ。
+         プレイ中だけ出す (タイトル/結果では各オーバーレイ側のボタンを使う) */
+      .sysbtns {
+        position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+        display: none; gap: 8px; z-index: 5;
+      }
+      .stage.in-game .sysbtns { display: flex; }
+      .sysbtns button {
+        border-radius: 99px; border: 1.5px solid rgba(247,241,222,.65);
+        background: rgba(28,22,12,.55); color: #f7f1de;
+        font-weight: 700; font-size: .8rem; letter-spacing: .04em;
+        padding: 6px 14px; min-height: 2.4rem; white-space: nowrap;
+      }
+      canvas#game { display: block; width: 100%; height: 100%; touch-action: none; }
+
+      .hud {
+        position: absolute; top: 0; left: 0; right: 0;
+        display: flex; flex-wrap: nowrap; gap: 2px 16px; align-items: baseline;
+        padding: 7px 14px 16px; pointer-events: none; overflow: hidden; white-space: nowrap;
+        background: linear-gradient(to bottom, rgba(28,22,12,.62), rgba(28,22,12,.34) 62%, rgba(28,22,12,0));
+        color: #fffaf0; font-weight: 700; font-size: clamp(.68rem, 1.9vw, .86rem);
+        /* 背景の明暗どちらでも読めるよう、濃色の縁取り＋影を重ねる (第8次) */
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.75),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 7px rgba(10,8,4,.8);
+      }
+      @media (max-width: 560px) { .hud { gap: 2px 9px; font-size: .64rem; } .hud .hud-secondary { display: none; } }
+      .hud .num { font-variant-numeric: tabular-nums; font-weight: 900; }
+      .hud .lbl { opacity: .92; font-size: .82em; margin-right: 3px; }
+      .hud .spacer { flex: 1; }
+      .hud .tval.ok { color: #bfe3a8; }
+      .hud .tval.warn { color: #ffd97a; }
+      .hud .tval.danger { color: #ff9d8a; }
+
+      .dashgauge {
+        position: absolute; left: 12px; bottom: 112px; width: min(180px, 34vw);
+        pointer-events: none; color: #fffaf0; font-size: .68rem; font-weight: 700;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .08em;
+      }
+      .dashgauge .bar {
+        height: 8px; border-radius: 99px; background: rgba(20,16,8,.45);
+        border: 1px solid rgba(247,241,222,.5); overflow: hidden; margin-top: 2px;
+      }
+      .dashgauge .fill {
+        height: 100%; width: 100%; background: #e8b64c; border-radius: 99px;
+        transform-origin: left center;
+      }
+      .dashgauge.ready .fill { background: #f2cd6e; }
+      .chunkinfo {
+        position: absolute; right: 12px; bottom: 10px; pointer-events: none;
+        color: #fffaf0; font-size: .68rem; font-weight: 700;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        text-align: right; letter-spacing: .04em;
+      }
+
+      .overlay {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center;
+        padding: 18px; gap: 10px;
+        background: radial-gradient(ellipse at center, rgba(30,24,14,.30), rgba(30,24,14,.52));
+        color: #f7f1de;
+      }
+      .overlay[hidden] { display: none; }
+      /* タイトル画面: 下部 (すみ忍が走る帯) は暗くせず、文言は上部に寄せる */
+      #ovTitle {
+        background: linear-gradient(to bottom, rgba(30,24,14,.52), rgba(30,24,14,.36) 50%, rgba(30,24,14,.08) 78%, rgba(30,24,14,0) 100%);
+        justify-content: flex-start;
+        padding-top: clamp(14px, 5.5%, 42px);
+      }
+      .overlay .ttl {
+        font-family: "Shippori Mincho B1", serif; font-weight: 800;
+        font-size: clamp(1.5rem, 5.5vw, 2.6rem); letter-spacing: .06em; margin: 0;
+        text-shadow:
+          0 1px 3px rgba(10,8,4,.95), 0 -1px 3px rgba(10,8,4,.7),
+          1px 0 3px rgba(10,8,4,.85), -1px 0 3px rgba(10,8,4,.85),
+          0 3px 12px rgba(10,8,4,.85);
+      }
+      .overlay .sub {
+        margin: 0; font-size: clamp(.8rem, 2.6vw, .98rem); opacity: .98; max-width: 34em;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.65),
+          1px 0 2px rgba(10,8,4,.8), -1px 0 2px rgba(10,8,4,.8),
+          0 2px 6px rgba(10,8,4,.8);
+      }
+      .overlay .wide-hint {
+        margin: 0; font-size: .72rem; letter-spacing: .08em; opacity: .95;
+        border: 1px solid rgba(247,241,222,.55); border-radius: 99px; padding: 2px 10px;
+        background: rgba(26,21,13,.45);
+        text-shadow: 0 1px 2px rgba(10,8,4,.95), 0 2px 5px rgba(10,8,4,.8);
+      }
+      .overlay .keys {
+        display: flex; gap: 8px 18px; flex-wrap: wrap; justify-content: center; font-size: .82rem; opacity: .98;
+        text-shadow: 0 1px 2px rgba(10,8,4,.95), 1px 0 2px rgba(10,8,4,.8), -1px 0 2px rgba(10,8,4,.8), 0 2px 6px rgba(10,8,4,.8);
+      }
+      .overlay .keys b {
+        background: rgba(247,241,222,.16); border: 1px solid rgba(247,241,222,.45);
+        border-radius: 6px; padding: 0 7px; font-weight: 900;
+      }
+      .bigbtn {
+        background: var(--accent); color: #fff8ea; border: none; border-radius: 10px;
+        font-size: 1.05rem; font-weight: 900; letter-spacing: .12em;
+        padding: 12px 34px; min-height: 3.2rem;
+        box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      }
+      .bigbtn:active { transform: translateY(1px); }
+      .ghostbtn {
+        background: transparent; color: #f7f1de; border: 1.5px solid rgba(247,241,222,.65);
+        border-radius: 10px; font-weight: 700; padding: 10px 20px; letter-spacing: .06em;
+        min-height: 3rem; /* タップ領域48px以上 (第20次) */
+      }
+      .btnrow { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      /* 結果画面の副ボタン (第20次): 主ボタン「再スタート」の下に2つ並べる */
+      .result-subbtns { margin-top: -2px; }
+      .result-subbtns .ghostbtn { font-size: .88rem; padding: 10px 16px; }
+      .resultgrid {
+        display: flex; gap: 8px 26px; flex-wrap: wrap; justify-content: center;
+        font-size: .95rem;
+      }
+      .resultgrid .num { font-weight: 900; font-size: 1.25em; font-variant-numeric: tabular-nums; }
+      .seedline {
+        font-size: .8rem; opacity: .95; font-variant-numeric: tabular-nums;
+        text-shadow: 0 1px 2px rgba(10,8,4,.95), 1px 0 2px rgba(10,8,4,.8), -1px 0 2px rgba(10,8,4,.8), 0 2px 6px rgba(10,8,4,.8);
+      }
+      /* 墨の濃さ (第11次・1ラン内): ラン中HUD (左上・HUDバーの下) の進捗ゲージ */
+      .inkgauge {
+        position: absolute; left: 12px; top: 44px; width: min(170px, 32vw);
+        pointer-events: none; color: #fffaf0; font-size: .68rem; font-weight: 700;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .06em; font-variant-numeric: tabular-nums;
+      }
+      .inkgauge .bar {
+        height: 7px; border-radius: 99px; background: rgba(20,16,8,.45);
+        border: 1px solid rgba(247,241,222,.5); overflow: hidden; margin-top: 2px;
+      }
+      .inkgauge .fill {
+        height: 100%; width: 100%; background: #a8a294; border-radius: 99px;
+        transform-origin: left center;
+      }
+      /* 無敵 (第11次・おにぎり): 残り時間表示 (墨ゲージの下) */
+      .invgauge {
+        position: absolute; left: 12px; top: 80px; width: min(170px, 32vw);
+        pointer-events: none; color: #ffe9a8; font-size: .68rem; font-weight: 900;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .06em; font-variant-numeric: tabular-nums;
+      }
+      .invgauge .bar {
+        height: 7px; border-radius: 99px; background: rgba(20,16,8,.45);
+        border: 1px solid rgba(255,233,168,.65); overflow: hidden; margin-top: 2px;
+      }
+      .invgauge .fill {
+        height: 100%; width: 100%; background: #e8b64c; border-radius: 99px;
+        transform-origin: left center;
+      }
+      /* 波乗り (第25次・水遁): 残り距離表示 (無敵ゲージの下) */
+      .wavegauge {
+        position: absolute; left: 12px; top: 168px; width: min(170px, 32vw);
+        pointer-events: none; color: #cfeaff; font-size: .68rem; font-weight: 900;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .06em; font-variant-numeric: tabular-nums;
+      }
+      .wavegauge .bar {
+        height: 7px; border-radius: 99px; background: rgba(20,16,8,.45);
+        border: 1px solid rgba(160,215,250,.65); overflow: hidden; margin-top: 2px;
+      }
+      .wavegauge .fill {
+        height: 100%; width: 100%; background: #4d9fd6; border-radius: 99px;
+        transform-origin: left center;
+      }
+      /* 巻物チャレンジ (第12次): 進捗表示 (無敵ゲージの下) */
+      .missiongauge {
+        position: absolute; left: 12px; top: 116px; width: min(200px, 40vw);
+        pointer-events: none; color: #fffaf0; font-size: .68rem; font-weight: 700;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .05em; font-variant-numeric: tabular-nums; white-space: nowrap;
+      }
+      .missiongauge .done { color: #ffd97a; font-weight: 900; }
+      /* 変わり身の術ストック表示 (第12次・第14次で改称): 巻物表示の下 */
+      .bunshingauge {
+        position: absolute; left: 12px; top: 140px;
+        pointer-events: none; color: #dfe6f5; font-size: .68rem; font-weight: 900;
+        text-shadow:
+          0 1px 2px rgba(10,8,4,.95), 0 -1px 2px rgba(10,8,4,.7),
+          1px 0 2px rgba(10,8,4,.85), -1px 0 2px rgba(10,8,4,.85),
+          0 2px 6px rgba(10,8,4,.8);
+        letter-spacing: .06em; white-space: nowrap;
+      }
+      /* 巻物バナー (第12次): ラン開始直後に約2秒だけ出す */
+      .missionbanner {
+        position: absolute; left: 50%; top: 15%; transform: translateX(-50%);
+        background: rgba(24,19,11,.88); color: #fffaf0;
+        border: 1.5px solid rgba(247,241,222,.6); border-radius: 10px;
+        padding: 8px 20px; font-weight: 900; font-size: clamp(.85rem, 2.6vw, 1.05rem);
+        letter-spacing: .06em; white-space: nowrap; pointer-events: none;
+        opacity: 0; transition: opacity .35s ease; z-index: 6;
+        text-shadow: 0 1px 2px rgba(0,0,0,.6);
+      }
+      .missionbanner.show { opacity: 1; }
+      .missionbanner .mk { color: #b3372a; background: #f7f1de; border-radius: 4px; padding: 0 7px; margin-right: 9px; font-size: .82em; }
+      /* 帯名表示 (第12次): 新しい距離帯に入った時に小さく短く出す */
+      .bandbanner {
+        position: absolute; left: 50%; top: 30%; transform: translateX(-50%);
+        color: #fffaf0; font-family: "Shippori Mincho B1", serif; font-weight: 800;
+        font-size: clamp(1.05rem, 3.6vw, 1.5rem); letter-spacing: .3em; text-indent: .3em;
+        pointer-events: none; opacity: 0; transition: opacity .5s ease; z-index: 6;
+        text-shadow:
+          0 1px 3px rgba(10,8,4,.95), 0 -1px 3px rgba(10,8,4,.7),
+          1px 0 3px rgba(10,8,4,.85), -1px 0 3px rgba(10,8,4,.85),
+          0 3px 12px rgba(10,8,4,.85);
+      }
+      .bandbanner.show { opacity: 1; }
+      .result-panel .missionline { margin: 0; font-size: .88rem; font-variant-numeric: tabular-nums; }
+      .result-panel .missionline .done { color: #ffd97a; font-weight: 900; }
+      /* 結果画面 (第8次): テキスト群の背後に濃色パネルを敷き、和紙トーンの
+         風景に文字が溶けないようにする。パネル内は明るい文字＋縁取りで読む */
+      .result-panel {
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+        max-width: min(94vw, 660px); max-height: 100%; overflow-y: auto;
+        background: rgba(24,19,11,.92);
+        border: 1.5px solid rgba(247,241,222,.6);
+        border-radius: 14px;
+        padding: 20px 28px 18px;
+        box-shadow: 0 12px 32px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.35);
+        color: #fffaf0;
+      }
+      .result-panel .ttl,
+      .result-panel .sub,
+      .result-panel .seedline,
+      .result-panel .bestline,
+      .result-panel .deathcomment,
+      .result-panel .titlename { text-shadow: 0 1px 3px rgba(0,0,0,.65); }
+      /* 結果画面 (P0): ベストとの差・死因コメント・称号 (落款風) */
+      .bestline { margin: 0; font-size: .88rem; font-variant-numeric: tabular-nums; }
+      .bestline .record { color: #ffd97a; font-weight: 900; }
+      .deathcomment {
+        margin: 0; font-family: "Shippori Mincho B1", serif; font-weight: 600;
+        font-size: 1.02rem; letter-spacing: .05em;
+      }
+      .titleline { display: flex; align-items: center; gap: 10px; }
+      .rakkan {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 46px; height: 46px; flex: none;
+        background: var(--accent); color: #fff8ea;
+        font-family: "Shippori Mincho B1", serif; font-weight: 800; font-size: 1.35rem; line-height: 1;
+        border-radius: 5px; transform: rotate(-2deg);
+        box-shadow: 0 3px 10px rgba(0,0,0,.35);
+      }
+      .titlename { font-weight: 900; letter-spacing: .06em; font-size: .98rem; }
+      /* 称号レアリティ (第19次): レア=古金、無理ゲー級=黒地に金文字 */
+      .rakkan.rare { background: #8a6d1f; }
+      .rakkan.muri { background: #171410; color: #ffd97a; box-shadow: 0 0 0 2px #c9a227, 0 3px 10px rgba(0,0,0,.45); }
+      .newtitle {
+        margin: 0; font-weight: 900; letter-spacing: .08em; font-size: .92rem; color: #ffd97a;
+        text-shadow: 0 1px 3px rgba(0,0,0,.65);
+      }
+      /* 称号一覧 (第19次): タイトル画面から開く図鑑パネル */
+      .titles-panel {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        width: min(94vw, 600px); max-height: 100%;
+        background: rgba(24,19,11,.93);
+        border: 1.5px solid rgba(247,241,222,.6); border-radius: 14px;
+        padding: 16px 20px 14px;
+        box-shadow: 0 12px 32px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.35);
+        color: #fffaf0;
+      }
+      .titles-panel .ttl { font-size: clamp(1.2rem, 4vw, 1.7rem); }
+      .titles-count { margin: 0; font-size: .85rem; font-variant-numeric: tabular-nums; opacity: .95; }
+      .titles-list { width: 100%; overflow-y: auto; text-align: left; padding-right: 4px; }
+      .tgroup {
+        margin: 10px 0 2px; font-family: "Shippori Mincho B1", serif; font-weight: 800;
+        font-size: .92rem; letter-spacing: .18em; color: #ffd97a;
+        border-bottom: 1px solid rgba(247,241,222,.35); padding-bottom: 2px;
+      }
+      .tgroup:first-child { margin-top: 0; }
+      .trow { display: flex; align-items: center; gap: 10px; padding: 5px 2px; }
+      .trow .seal {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; flex: none;
+        background: var(--accent); color: #fff8ea;
+        font-family: "Shippori Mincho B1", serif; font-weight: 800; font-size: .98rem; line-height: 1;
+        border-radius: 4px; transform: rotate(-2deg);
+      }
+      .trow .seal.rare { background: #8a6d1f; }
+      .trow .seal.muri { background: #171410; color: #ffd97a; box-shadow: 0 0 0 2px #c9a227; }
+      .trow.locked .seal { background: #4a443a; color: #cfc8b8; box-shadow: none; }
+      .trow .tmain { display: flex; flex-direction: column; min-width: 0; }
+      .trow .tname { font-weight: 900; font-size: .92rem; letter-spacing: .04em; }
+      .trow.locked .tname { color: #b9b2a2; }
+      .trow .thint { font-size: .74rem; opacity: .85; }
+      .trow .tdate { margin-left: auto; flex: none; font-size: .74rem; opacity: .9; font-variant-numeric: tabular-nums; }
+
+      /* 操作UIはプレイ中だけ出す (タイトル/結果オーバーレイと重ねない) */
+      .touchbtns { display: none; }
+      .stage.in-game .touchbtns {
+        position: absolute; bottom: 34px; display: flex; gap: 10px;
+        align-items: flex-end;
+      }
+      .stage.in-game .touchbtns.touch-left { left: 10px; flex-direction: column; align-items: center; gap: 14px; }
+      .stage.in-game .touchbtns.touch-right { right: 10px; }
+      .stage:not(.in-game) .hud,
+      .stage:not(.in-game) .dashgauge,
+      .stage:not(.in-game) .inkgauge,
+      .stage:not(.in-game) .invgauge,
+      .stage:not(.in-game) .wavegauge,
+      .stage:not(.in-game) .missiongauge,
+      .stage:not(.in-game) .bunshingauge,
+      .stage:not(.in-game) .chunkinfo { visibility: hidden; }
+      @media (max-width: 560px) {
+        .overlay { gap: 7px; padding: 10px 12px; justify-content: center; overflow-y: auto; }
+        .overlay .keys { display: none; }
+        .overlay .sub { font-size: .78rem; line-height: 1.5; }
+        .overlay .ttl { font-size: 1.35rem; }
+        .overlay .seedline { display: none; }
+        .bigbtn { min-height: 2.9rem; padding: 10px 28px; font-size: 1rem; }
+        /* 結果画面はステージ高さに収める */
+        #ovOver { gap: 5px; }
+        #ovOver .result-panel { gap: 5px; padding: 12px 14px 10px; border-radius: 11px; max-width: 96vw; }
+        #ovOver .ttl { font-size: 1.15rem; }
+        #ovOver .resultgrid { gap: 2px 14px; font-size: .8rem; }
+        #ovOver .resultgrid .num { font-size: 1.1em; }
+        #ovOver .sub { font-size: .7rem; line-height: 1.45; }
+        #ovOver .bestline { font-size: .72rem; }
+        #ovOver .deathcomment { font-size: .88rem; }
+        #ovOver .rakkan { width: 34px; height: 34px; font-size: 1.05rem; }
+        #ovOver .titlename { font-size: .85rem; }
+        #ovOver .btnrow { flex-wrap: nowrap; gap: 8px; }
+        #ovOver .result-subbtns { flex-wrap: wrap; }
+        /* 第20次: 結果画面のボタンはモバイルでもタップ領域48px (3rem) を確保 */
+        #ovOver .bigbtn { min-height: 3rem; padding: 8px 14px; font-size: .88rem; letter-spacing: .04em; }
+        #ovOver .ghostbtn { min-height: 3rem; padding: 8px 12px; font-size: .82rem; }
+        #ovTitles .bigbtn { min-height: 3rem; }
+      }
+      .touchbtns button {
+        border-radius: 50%; border: 2px solid rgba(247,241,222,.75);
+        background: rgba(28,22,12,.55); color: #f7f1de; font-weight: 900;
+        touch-action: none;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+        line-height: 1.15;
+      }
+      .touchbtns button small { font-size: .6rem; font-weight: 700; opacity: .85; letter-spacing: .1em; }
+      .touchbtns .btn-dash { width: 72px; height: 72px; font-size: .98rem; }
+      .touchbtns .btn-jump { width: 88px; height: 88px; font-size: 1.05rem; }
+      .touchbtns button.on { background: rgba(179,55,42,.75); }
+      .touchbtns button:disabled { opacity: .35; }
+      @media (pointer: fine) {
+        .touchbtns { opacity: .55; }
+        .touchbtns:hover { opacity: 1; }
+      }
+
+      /* ---------- control bar ---------- */
+      .controls {
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 2px 0;
+      }
+      .controls button {
+        border-radius: 9px; border: 1.5px solid var(--ink); background: var(--card);
+        color: var(--ink); font-weight: 700; padding: 8px 16px; letter-spacing: .04em;
+      }
+      .controls button.primary { background: var(--btn); color: var(--btn-text); }
+      .controls .seedbox { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: .85rem; color: var(--ink-soft); }
+      .controls input {
+        width: 7.5em; min-height: 2.75rem; border-radius: 8px; border: 1.5px solid var(--line);
+        background: var(--card); color: var(--ink); padding: 6px 9px; font: inherit;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---------- text sections ---------- */
+      section.block { margin-top: 34px; }
+      section.block h2 {
+        font-family: "Shippori Mincho B1", serif; font-weight: 800;
+        font-size: 1.3rem; margin: 0 0 4px; letter-spacing: .05em;
+        border-bottom: 2px solid var(--ink); padding-bottom: 6px;
+      }
+      section.block h2 .aka { color: var(--accent); }
+      section.block p.lead { color: var(--ink-soft); margin: 8px 0 0; font-size: .92rem; }
+      .howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
+      .howto .item {
+        background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px;
+      }
+      .howto .item h3 { margin: 0 0 4px; font-size: 1rem; }
+      .howto .item h3 .k {
+        display: inline-block; background: var(--ink); color: var(--paper);
+        border-radius: 5px; padding: 0 7px; margin-right: 6px; font-size: .8rem; letter-spacing: .05em;
+      }
+      .howto .item p { margin: 0; font-size: .88rem; color: var(--ink-soft); }
+
+      .specwrap { overflow-x: auto; margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+      table.spec { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .86rem; }
+      table.spec th, table.spec td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+      table.spec th { background: var(--paper-2); font-weight: 900; white-space: nowrap; }
+      table.spec tr:last-child td { border-bottom: none; }
+      table.spec td.item { font-weight: 700; white-space: nowrap; }
+      .tag {
+        display: inline-block; font-size: .68rem; font-weight: 900; letter-spacing: .06em;
+        border-radius: 4px; padding: 0 5px; margin-right: 4px; vertical-align: 1px;
+      }
+      .tag.first { background: #33512f; color: #eaf3e2; }
+      .tag.index { background: #6d5a26; color: #fdf3d0; }
+      .tag.est { background: #7a4438; color: #fdeae4; }
+      @media (prefers-color-scheme: dark) {
+        .tag.first { background: #476b41; } .tag.index { background: #8a742f; } .tag.est { background: #96604f; }
+      }
+      a { color: var(--accent-ink); word-break: break-all; }
+      .unknown { margin-top: 14px; background: var(--card); border: 1px dashed var(--ink-faint); border-radius: 10px; padding: 12px 16px; }
+      .unknown h3 { margin: 0 0 6px; font-size: .98rem; }
+      .unknown ul { margin: 0; padding-left: 1.2em; font-size: .88rem; color: var(--ink-soft); }
+      footer { margin-top: 36px; color: var(--ink-faint); font-size: .8rem; text-align: center; }
+      @media (max-width: 560px) {
+        .wrap { padding: 14px 10px 44px; }
+        .controls .seedbox { margin-left: 0; }
+      }
